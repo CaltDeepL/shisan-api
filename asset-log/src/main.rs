@@ -1,8 +1,16 @@
+mod auth;
 mod config;
 mod error;
+mod handler;
+mod middleware;
+mod repository;
 mod state;
 
-use axum::{extract::State, http::StatusCode, routing::get, Router};
+use crate::auth::jwt::JwtKeys;
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use clap::{Parser, Subcommand};
 use config::Config;
 use sqlx::postgres::PgPoolOptions;
@@ -10,7 +18,6 @@ use state::AppState;
 use std::process;
 use std::time::Duration;
 use tracing_subscriber::EnvFilter;
-use error::AppError;
 
 #[derive(Parser)]
 #[command(name = "asset-log")]
@@ -60,10 +67,21 @@ fn run_healthcheck() {
 
 async fn run_server() {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+        )
         .init();
 
-    let config = Config::from_env();
+    // DUMMY_HASH の遅延初期化をここで済ませる。
+    // 未登録メールでの初回ログインだけ Argon2 が2回走るのを防ぐ。
+    tokio::task::spawn_blocking(auth::password::warmup)
+        .await
+        .expect("warmup task panicked");
+    
+// ホストから直接起動するとき用。コンテナでは compose の environment が使われる
+    let _ = dotenvy::dotenv();
+    // 設定不備は起動時に落とす（実行中に気づくより安全）
+    let config = Config::from_env().expect("設定の読み込みに失敗しました");
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -76,44 +94,14 @@ async fn run_server() {
         .await
         .expect("failed to run migrations");
 
-    let state = AppState { db: pool };
+    let jwt = JwtKeys::new(&config.jwt_secret, config.jwt_ttl_minutes);
+    let state = AppState { db: pool, jwt };
 
     let app = Router::new()
         .route("/health", get(health_handler))
-        .route(
-            "/_debug/conflict",
-            get(|State(s): State<AppState>| async move {
-                sqlx::query("INSERT INTO users (email, password_hash) VALUES ('dup@example.com', 'x')")
-                    .execute(&s.db)
-                    .await?;
-                sqlx::query("INSERT INTO users (email, password_hash) VALUES ('DUP@example.com', 'x')")
-                    .execute(&s.db)
-                    .await?;
-                Ok::<_, AppError>(StatusCode::OK)
-            }),
-        )
-        .route(
-            "/_debug/check",
-            get(|State(s): State<AppState>| async move {
-                let user_id: uuid::Uuid = sqlx::query_scalar(
-                    "INSERT INTO users (email, password_hash) VALUES ('check@example.com', 'x')
-                     ON CONFLICT DO NOTHING RETURNING id",
-                )
-                .fetch_one(&s.db)
-                .await?;
-
-                // iDeCo に withholding を入れる → accounts_withholding_only_tokutei 違反
-                sqlx::query(
-                    "INSERT INTO accounts (user_id, account_type, name, currency, withholding)
-                     VALUES ($1, 'ideco', 'テスト', 'JPY', false)",
-                )
-                .bind(user_id)
-                .execute(&s.db)
-                .await?;
-
-                Ok::<_, AppError>(StatusCode::OK)
-            }),
-        )
+        .route("/auth/register", post(handler::auth::register))
+        .route("/auth/login", post(handler::auth::login))
+        .route("/me", get(handler::auth::me))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
@@ -122,9 +110,7 @@ async fn run_server() {
 
     tracing::info!("listening on port {}", config.port);
 
-    axum::serve(listener, app)
-        .await
-        .expect("server error");
+    axum::serve(listener, app).await.expect("server error");
 }
 
 async fn health_handler() -> &'static str {

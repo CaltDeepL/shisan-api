@@ -1,5 +1,5 @@
 use axum::{
-    http::{header, StatusCode},
+    http::{header, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     Json,
 };
@@ -18,6 +18,9 @@ mod sqlstate {
 pub enum AppError {
     #[error("{0}")]
     BadRequest(String),
+
+    #[error("メールアドレスまたはパスワードが違います")]
+       InvalidCredentials,
 
     #[error("認証が必要です")]
     Unauthorized,
@@ -75,7 +78,7 @@ impl AppError {
     fn status(&self) -> StatusCode {
         match self {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-            Self::Unauthorized => StatusCode::UNAUTHORIZED,
+            Self::Unauthorized | Self::InvalidCredentials => StatusCode::UNAUTHORIZED,
             Self::Forbidden => StatusCode::FORBIDDEN,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::Conflict(_) => StatusCode::CONFLICT,
@@ -89,6 +92,7 @@ impl AppError {
         match self {
             Self::BadRequest(_) => "bad-request",
             Self::Unauthorized => "unauthorized",
+            Self::InvalidCredentials => "invalid-credentials",
             Self::Forbidden => "forbidden",
             Self::NotFound(_) => "not-found",
             Self::Conflict(_) => "conflict",
@@ -100,7 +104,7 @@ impl AppError {
     fn title(&self) -> &'static str {
         match self {
             Self::BadRequest(_) => "Bad Request",
-            Self::Unauthorized => "Unauthorized",
+            Self::Unauthorized | Self::InvalidCredentials => "Unauthorized",
             Self::Forbidden => "Forbidden",
             Self::NotFound(_) => "Not Found",
             Self::Conflict(_) => "Conflict",
@@ -202,7 +206,7 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let status = self.status();
         let trace_id = Uuid::new_v4();
-
+        let needs_challenge = matches!(self, Self::Unauthorized | Self::InvalidCredentials);
         if status.is_server_error() {
             // source まで出すため Debug を使う
             tracing::error!(%trace_id, error = ?self, "internal error");
@@ -230,12 +234,27 @@ impl IntoResponse for AppError {
             trace_id,
         };
 
-        (
+       let mut response = (
             status,
             [(header::CONTENT_TYPE, "application/problem+json")],
             Json(body),
         )
-            .into_response()
+            .into_response();
+
+        if needs_challenge {
+            response.headers_mut().insert(
+                header::WWW_AUTHENTICATE,
+                HeaderValue::from_static(r#"Bearer realm="asset-log""#),
+            );
+        }
+
+        response
+    }
+}
+
+impl FieldError {
+    pub fn new(field: impl Into<String>, message: impl Into<String>) -> Self {
+        Self { field: field.into(), message: message.into() }
     }
 }
 

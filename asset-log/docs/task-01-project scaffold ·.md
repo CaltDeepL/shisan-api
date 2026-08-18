@@ -215,7 +215,7 @@ async fn health_handler() -> &'static str {
 
 ```rust
 #[derive(Clone)]
-pub struct Config {
+pub struct AppState {
     pub database_url: String,
     pub port: u16,
 }
@@ -241,6 +241,7 @@ use sqlx::PgPool;
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
+    pub jwt: JwtKeys,
 }
 ```
 
