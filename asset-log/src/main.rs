@@ -2,7 +2,7 @@ mod config;
 mod error;
 mod state;
 
-use axum::{routing::get, Router};
+use axum::{extract::State, http::StatusCode, routing::get, Router};
 use clap::{Parser, Subcommand};
 use config::Config;
 use sqlx::postgres::PgPoolOptions;
@@ -10,6 +10,7 @@ use state::AppState;
 use std::process;
 use std::time::Duration;
 use tracing_subscriber::EnvFilter;
+use error::AppError;
 
 #[derive(Parser)]
 #[command(name = "asset-log")]
@@ -79,6 +80,40 @@ async fn run_server() {
 
     let app = Router::new()
         .route("/health", get(health_handler))
+        .route(
+            "/_debug/conflict",
+            get(|State(s): State<AppState>| async move {
+                sqlx::query("INSERT INTO users (email, password_hash) VALUES ('dup@example.com', 'x')")
+                    .execute(&s.db)
+                    .await?;
+                sqlx::query("INSERT INTO users (email, password_hash) VALUES ('DUP@example.com', 'x')")
+                    .execute(&s.db)
+                    .await?;
+                Ok::<_, AppError>(StatusCode::OK)
+            }),
+        )
+        .route(
+            "/_debug/check",
+            get(|State(s): State<AppState>| async move {
+                let user_id: uuid::Uuid = sqlx::query_scalar(
+                    "INSERT INTO users (email, password_hash) VALUES ('check@example.com', 'x')
+                     ON CONFLICT DO NOTHING RETURNING id",
+                )
+                .fetch_one(&s.db)
+                .await?;
+
+                // iDeCo に withholding を入れる → accounts_withholding_only_tokutei 違反
+                sqlx::query(
+                    "INSERT INTO accounts (user_id, account_type, name, currency, withholding)
+                     VALUES ($1, 'ideco', 'テスト', 'JPY', false)",
+                )
+                .bind(user_id)
+                .execute(&s.db)
+                .await?;
+
+                Ok::<_, AppError>(StatusCode::OK)
+            }),
+        )
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
