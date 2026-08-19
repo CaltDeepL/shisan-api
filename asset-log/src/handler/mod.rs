@@ -1,5 +1,5 @@
 pub mod auth;
-// pub mod accounts;  // TODO: タスク#5 ④で有効化
+pub mod accounts;  
 pub mod analytics;
 pub mod assets;
 pub mod health;

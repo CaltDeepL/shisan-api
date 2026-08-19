@@ -1,9 +1,6 @@
-use asset_log::{auth, config, handler, state};
+use asset_log::{auth, config, state};
 use crate::auth::jwt::JwtKeys;
-use axum::{
-    routing::{get, post},
-    Router,
-};
+
 use clap::{Parser, Subcommand};
 use config::Config;
 use sqlx::postgres::PgPoolOptions;
@@ -90,12 +87,7 @@ async fn run_server() {
     let jwt = JwtKeys::new(&config.jwt_secret, config.jwt_ttl_minutes);
     let state = AppState { db: pool, jwt };
 
-    let app = Router::new()
-        .route("/health", get(health_handler))
-        .route("/auth/register", post(handler::auth::register))
-        .route("/auth/login", post(handler::auth::login))
-        .route("/me", get(handler::auth::me))
-        .with_state(state);
+    let app = asset_log::app(state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
         .await
@@ -106,6 +98,3 @@ async fn run_server() {
     axum::serve(listener, app).await.expect("server error");
 }
 
-async fn health_handler() -> &'static str {
-    "OK"
-}
