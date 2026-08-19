@@ -1,5 +1,7 @@
 target/
 .git/
-.gitignore
-*.md
 .env
+.env.*
+!.env.example
+docs/
+**/*.md

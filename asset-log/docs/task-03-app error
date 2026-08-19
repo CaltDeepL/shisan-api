@@ -28,7 +28,6 @@
 |---|---|---|
 | `BadRequest(String)` | 400 | リクエスト形式の不正 |
 | `Unauthorized` | 401 | 認証なし・トークン不正（タスク#4で使用） |
-| `Forbidden` | 403 | 他ユーザーのリソースへのアクセス |
 | `NotFound(&'static str)` | 404 | リソース不在 |
 | `Conflict(String)` | 409 | UNIQUE 制約違反 |
 | `UnprocessableEntity { detail, errors }` | 422 | CHECK 制約違反・バリデーション |
