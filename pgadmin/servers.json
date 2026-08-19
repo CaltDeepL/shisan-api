@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "assetlog (compose)",
+      "Group": "shisan-api",
+      "Host": "db",
+      "Port": 5432,
+      "MaintenanceDB": "assetlog",
+      "Username": "assetlog",
+      "SSLMode": "prefer"
+    }
+  }
+}

@@ -23,6 +23,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       PORT: ${PORT}
       RUST_LOG: ${RUST_LOG}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8080:8080"
     depends_on:
@@ -34,5 +35,24 @@ services:
       timeout: 3s
       retries: 5
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: shisan-api-pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  pgadmin_data:   #
