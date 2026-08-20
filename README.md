@@ -177,12 +177,12 @@ HEALTHCHECK CMD ["./asset-log", "healthcheck"]
 |---|---|---|
 | 1 | プロジェクト雛形 / `/health` / Docker Compose | 完了 |
 | 2 | マイグレーション 0001（users / accounts） | 完了 |
-| 3 | AppError 整備 | 未着手 |
-| 4 | 認証（register / login / JWT） | 未着手 |
-| 5 | 口座 CRUD | 未着手 |
-| 6 | 銘柄・価格 | 未着手 |
-| 7 | `domain::position`（総平均法・評価損益） | 未着手 |
-| 8 | 取引 CRUD | 未着手 |
+| 3 | AppError 整備 | 完了 |
+| 4 | 認証（register / login / JWT） | 完了 |
+| 5 | 口座 CRUD | 完了 |
+| 6 | 銘柄・価格 | 完了 |
+| 7 | `domain::position`（総平均法・評価損益） | 完了 |
+| 8 | 取引 CRUD | 完了 |
 | 9 | `/holdings` エンドポイント | 未着手 |
 | 10 | FxRateProvider（Frankfurter） | 未着手 |
 | 11 | analytics（XIRR） | 未着手 |
