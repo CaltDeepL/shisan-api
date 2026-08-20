@@ -182,7 +182,7 @@ HEALTHCHECK CMD ["./asset-log", "healthcheck"]
 | 5 | 口座 CRUD | 完了 |
 | 6 | 銘柄・価格 | 完了 |
 | 7 | `domain::position`（総平均法・評価損益） | 完了 |
-| 8 | 取引 CRUD | 未着手 |
+| 8 | 取引 CRUD | 完了 |
 | 9 | `/holdings` エンドポイント | 未着手 |
 | 10 | FxRateProvider（Frankfurter） | 未着手 |
 | 11 | analytics（XIRR） | 未着手 |
