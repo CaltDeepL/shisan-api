@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            EXISTS (SELECT 1 FROM accounts WHERE id = $2 AND user_id = $1) AS \"account_exists!\",\n            (SELECT price_unit FROM assets WHERE id = $3 AND user_id = $1) AS \"price_unit?\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "price_unit?",
+        "type_info": "Numeric",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "cc052cb09e335da33964ca54f488726b08e52dd1754bc06a8f59a8823b90c882"
+}

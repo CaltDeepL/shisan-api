@@ -236,3 +236,103 @@ async fn requires_authentication(db: PgPool) {
     let (status, _) = request(&app, Method::GET, "/accounts", None, None).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
+
+/// 取引が紐づいた口座は削除できない（transactions_account_id_fkey / ON DELETE RESTRICT）。
+/// FK違反が 500 ではなく 422 に落ちることの確認も兼ねる。
+#[sqlx::test]
+async fn account_with_transactions_cannot_be_deleted(db: PgPool) {
+    let app = test_app(db);
+    let user = register_user(&app, "owner@example.com").await;
+
+    let (status, account) = request(
+        &app,
+        Method::POST,
+        "/accounts",
+        Some(&user.token),
+        Some(json!({
+            "name": "特定口座",
+            "account_type": "tokutei",
+            "institution": "テスト証券",
+            "withholding": true,
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{account}");
+    let account_id = account["id"].as_str().expect("id").to_owned();
+
+    let (status, asset) = request(
+        &app,
+        Method::POST,
+        "/assets",
+        Some(&user.token),
+        Some(json!({
+            "symbol": "VOO",
+            "name": "Vanguard S&P 500 ETF",
+            "asset_class": "etf",
+            "currency": "JPY",
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{asset}");
+
+    let (status, trade) = request(
+        &app,
+        Method::POST,
+        "/transactions",
+        Some(&user.token),
+        Some(json!({
+            "account_id": account_id,
+            "asset_id": asset["id"],
+            "kind": "buy",
+            "quantity": "10",
+            "price": "500",
+            "traded_at": "2026-01-05",
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{trade}");
+
+    // 取引が残っている間は削除できない
+    let (status, err) = request(
+        &app,
+        Method::DELETE,
+        &format!("/accounts/{account_id}"),
+        Some(&user.token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{err}");
+
+    // 口座は消えていない
+    let (status, _) = request(
+        &app,
+        Method::GET,
+        &format!("/accounts/{account_id}"),
+        Some(&user.token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // 取引を消せば削除できる
+    let trade_id = trade["id"].as_str().expect("id");
+    let (status, _) = request(
+        &app,
+        Method::DELETE,
+        &format!("/transactions/{trade_id}"),
+        Some(&user.token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    let (status, _) = request(
+        &app,
+        Method::DELETE,
+        &format!("/accounts/{account_id}"),
+        Some(&user.token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+}
