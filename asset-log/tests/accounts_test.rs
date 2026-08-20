@@ -18,8 +18,14 @@ async fn create_and_fetch_account(db: PgPool) {
         "withholding": true,
         "institution": "SBI証券"
     });
-    let (status, created) =
-        request(&app, Method::POST, "/accounts", Some(&user.token), Some(body)).await;
+    let (status, created) = request(
+        &app,
+        Method::POST,
+        "/accounts",
+        Some(&user.token),
+        Some(body),
+    )
+    .await;
 
     assert_eq!(status, StatusCode::CREATED);
     assert_eq!(created["name"], "SBI証券 特定");
@@ -53,8 +59,14 @@ async fn tokutei_requires_withholding(db: PgPool) {
     let user = register_user(&app, "owner@example.com").await;
 
     let body = json!({ "name": "源泉なし", "account_type": "tokutei" });
-    let (status, json) =
-        request(&app, Method::POST, "/accounts", Some(&user.token), Some(body)).await;
+    let (status, json) = request(
+        &app,
+        Method::POST,
+        "/accounts",
+        Some(&user.token),
+        Some(body),
+    )
+    .await;
 
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(json["type"], "/errors/unprocessable-entity");
@@ -77,8 +89,14 @@ async fn duplicate_name_conflicts(db: PgPool) {
     .await;
     assert_eq!(status, StatusCode::CREATED);
 
-    let (status, json) =
-        request(&app, Method::POST, "/accounts", Some(&user.token), Some(body)).await;
+    let (status, json) = request(
+        &app,
+        Method::POST,
+        "/accounts",
+        Some(&user.token),
+        Some(body),
+    )
+    .await;
     assert_eq!(status, StatusCode::CONFLICT);
     assert_eq!(json["type"], "/errors/conflict");
 }
@@ -94,8 +112,14 @@ async fn patch_distinguishes_null_and_absent(db: PgPool) {
         "account_type": "ippan",
         "institution": "元の証券会社"
     });
-    let (_, created) =
-        request(&app, Method::POST, "/accounts", Some(&user.token), Some(body)).await;
+    let (_, created) = request(
+        &app,
+        Method::POST,
+        "/accounts",
+        Some(&user.token),
+        Some(body),
+    )
+    .await;
     let id = created["id"].as_str().unwrap().to_owned();
     let path = format!("/accounts/{id}");
 
@@ -146,8 +170,14 @@ async fn other_users_account_is_not_found(db: PgPool) {
     let intruder = register_user(&app, "intruder@example.com").await;
 
     let body = json!({ "name": "他人の口座", "account_type": "ideco" });
-    let (_, created) =
-        request(&app, Method::POST, "/accounts", Some(&owner.token), Some(body)).await;
+    let (_, created) = request(
+        &app,
+        Method::POST,
+        "/accounts",
+        Some(&owner.token),
+        Some(body),
+    )
+    .await;
     let path = format!("/accounts/{}", created["id"].as_str().unwrap());
 
     for method in [Method::GET, Method::DELETE] {
@@ -177,8 +207,14 @@ async fn delete_then_gone(db: PgPool) {
     let user = register_user(&app, "owner@example.com").await;
 
     let body = json!({ "name": "消す口座", "account_type": "bank" });
-    let (_, created) =
-        request(&app, Method::POST, "/accounts", Some(&user.token), Some(body)).await;
+    let (_, created) = request(
+        &app,
+        Method::POST,
+        "/accounts",
+        Some(&user.token),
+        Some(body),
+    )
+    .await;
     let path = format!("/accounts/{}", created["id"].as_str().unwrap());
 
     let (status, _) = request(&app, Method::DELETE, &path, Some(&user.token), None).await;

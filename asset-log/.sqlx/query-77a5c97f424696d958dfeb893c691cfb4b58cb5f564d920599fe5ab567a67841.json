@@ -1,0 +1,79 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT p.asset_id, p.priced_on, p.price, p.source, p.updated_at\n        FROM asset_prices p\n        JOIN assets a ON a.id = p.asset_id\n        WHERE p.asset_id = $1\n          AND a.user_id  = $2\n          AND ($3::date IS NULL OR p.priced_on >= $3)\n          AND ($4::date IS NULL OR p.priced_on <= $4)\n        ORDER BY p.priced_on DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "asset_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "asset_prices",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "priced_on",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "asset_prices",
+            "name": "priced_on"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "price",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "asset_prices",
+            "name": "price"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "asset_prices",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "asset_prices",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Date",
+        "Date"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "77a5c97f424696d958dfeb893c691cfb4b58cb5f564d920599fe5ab567a67841"
+}

@@ -1,0 +1,139 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id,\n            user_id,\n            symbol,\n            name,\n            asset_class AS \"asset_class: AssetClass\",\n            currency,\n            price_unit,\n            created_at,\n            updated_at\n        FROM assets\n        WHERE user_id = $1\n          AND (\n                $2::text IS NULL\n             OR symbol ILIKE '%' || $2 || '%'\n             OR name   ILIKE '%' || $2 || '%'\n          )\n        ORDER BY upper(symbol)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "symbol",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "symbol"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "asset_class: AssetClass",
+        "type_info": {
+          "Custom": {
+            "name": "asset_class",
+            "kind": {
+              "Enum": [
+                "equity",
+                "etf",
+                "mutual_fund",
+                "bond",
+                "cash",
+                "other"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "asset_class"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "currency",
+        "type_info": "Bpchar",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "currency"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "price_unit",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "price_unit"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f22bdf96ad6ab60220b7f49a1d023b678d71a18bff55742c89823971bfc7145a"
+}

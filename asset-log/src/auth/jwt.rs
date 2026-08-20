@@ -1,5 +1,5 @@
 use chrono::Utc;
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -33,7 +33,11 @@ impl JwtKeys {
     pub fn issue(&self, user_id: Uuid) -> anyhow::Result<(String, i64)> {
         let now = Utc::now().timestamp();
         let exp = now + self.ttl_minutes * 60;
-        let claims = Claims { sub: user_id, iat: now, exp };
+        let claims = Claims {
+            sub: user_id,
+            iat: now,
+            exp,
+        };
         let token = encode(&Header::new(Algorithm::HS256), &claims, &self.encoding)?;
         Ok((token, self.ttl_minutes * 60))
     }

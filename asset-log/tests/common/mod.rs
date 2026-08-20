@@ -1,11 +1,11 @@
 use asset_log::{auth::jwt::JwtKeys, state::AppState};
 use axum::{
-    body::Body,
-    http::{header, Method, Request, StatusCode},
     Router,
+    body::Body,
+    http::{Method, Request, StatusCode, header},
 };
 use http_body_util::BodyExt;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sqlx::PgPool;
 use tower::ServiceExt;
 use uuid::Uuid;
@@ -29,10 +29,17 @@ pub async fn register_user(app: &Router, email: &str) -> TestUser {
     let body = json!({ "email": email, "password": "password1234" });
     let (status, json) = request(app, Method::POST, "/auth/register", None, Some(body)).await;
     assert_eq!(status, StatusCode::CREATED, "register failed: {json}");
-    let token = json["access_token"].as_str().expect("access_token").to_owned();
+    let token = json["access_token"]
+        .as_str()
+        .expect("access_token")
+        .to_owned();
 
     let (_, me) = request(app, Method::GET, "/me", Some(&token), None).await;
-    let id = me["user_id"].as_str().expect("user_id").parse().expect("uuid");
+    let id = me["user_id"]
+        .as_str()
+        .expect("user_id")
+        .parse()
+        .expect("uuid");
 
     TestUser { id, token }
 }
@@ -63,7 +70,12 @@ pub async fn request(
     let response = app.clone().oneshot(request).await.expect("request failed");
     let status = response.status();
 
-    let bytes = response.into_body().collect().await.expect("body").to_bytes();
+    let bytes = response
+        .into_body()
+        .collect()
+        .await
+        .expect("body")
+        .to_bytes();
     let json = if bytes.is_empty() {
         Value::Null
     } else {

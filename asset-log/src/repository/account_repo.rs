@@ -45,11 +45,7 @@ pub async fn list(db: &PgPool, user_id: Uuid) -> Result<Vec<Account>, sqlx::Erro
     .await
 }
 
-pub async fn find(
-    db: &PgPool,
-    user_id: Uuid,
-    id: Uuid,
-) -> Result<Option<Account>, sqlx::Error> {
+pub async fn find(db: &PgPool, user_id: Uuid, id: Uuid) -> Result<Option<Account>, sqlx::Error> {
     sqlx::query_as!(
         Account,
         r#"

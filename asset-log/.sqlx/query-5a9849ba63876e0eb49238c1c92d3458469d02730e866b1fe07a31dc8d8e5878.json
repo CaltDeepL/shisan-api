@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO asset_prices (asset_id, priced_on, price, source)\n        SELECT a.id, u.priced_on, u.price, $5\n        FROM assets a\n        CROSS JOIN UNNEST($3::date[], $4::numeric[]) AS u(priced_on, price)\n        WHERE a.id = $1 AND a.user_id = $2\n        ON CONFLICT (asset_id, priced_on)\n        DO UPDATE SET price = EXCLUDED.price, source = EXCLUDED.source\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "DateArray",
+        "NumericArray",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5a9849ba63876e0eb49238c1c92d3458469d02730e866b1fe07a31dc8d8e5878"
+}

@@ -1,6 +1,6 @@
+use crate::auth::jwt::JwtKeys;
 use axum::extract::FromRef;
 use sqlx::PgPool;
-use crate::auth::jwt::JwtKeys;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -9,9 +9,13 @@ pub struct AppState {
 }
 
 impl FromRef<AppState> for JwtKeys {
-    fn from_ref(s: &AppState) -> Self { s.jwt.clone() }
+    fn from_ref(s: &AppState) -> Self {
+        s.jwt.clone()
+    }
 }
 
 impl FromRef<AppState> for PgPool {
-    fn from_ref(s: &AppState) -> Self { s.db.clone() }
+    fn from_ref(s: &AppState) -> Self {
+        s.db.clone()
+    }
 }

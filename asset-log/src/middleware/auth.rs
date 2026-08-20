@@ -1,8 +1,8 @@
+use axum::RequestPartsExt;
 use axum::extract::{FromRef, FromRequestParts};
 use axum::http::request::Parts;
-use axum::RequestPartsExt;
-use axum_extra::headers::{authorization::Bearer, Authorization};
 use axum_extra::TypedHeader;
+use axum_extra::headers::{Authorization, authorization::Bearer};
 use uuid::Uuid;
 
 use crate::auth::jwt::JwtKeys;
