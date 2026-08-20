@@ -1,5 +1,5 @@
-use asset_log::{auth, config, state};
 use crate::auth::jwt::JwtKeys;
+use asset_log::{auth, config, state};
 
 use clap::{Parser, Subcommand};
 use config::Config;
@@ -67,8 +67,8 @@ async fn run_server() {
     tokio::task::spawn_blocking(auth::password::warmup)
         .await
         .expect("warmup task panicked");
-    
-// ホストから直接起動するとき用。コンテナでは compose の environment が使われる
+
+    // ホストから直接起動するとき用。コンテナでは compose の environment が使われる
     let _ = dotenvy::dotenv();
     // 設定不備は起動時に落とす（実行中に気づくより安全）
     let config = Config::from_env().expect("設定の読み込みに失敗しました");
@@ -97,4 +97,3 @@ async fn run_server() {
 
     axum::serve(listener, app).await.expect("server error");
 }
-

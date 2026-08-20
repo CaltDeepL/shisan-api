@@ -1,7 +1,7 @@
 use axum::{
-    http::{header, HeaderValue, StatusCode},
-    response::{IntoResponse, Response},
     Json,
+    http::{HeaderValue, StatusCode, header},
+    response::{IntoResponse, Response},
 };
 use serde::Serialize;
 use uuid::Uuid;
@@ -20,7 +20,7 @@ pub enum AppError {
     BadRequest(String),
 
     #[error("メールアドレスまたはパスワードが違います")]
-       InvalidCredentials,
+    InvalidCredentials,
 
     #[error("認証が必要です")]
     Unauthorized,
@@ -146,37 +146,43 @@ fn unique_message(constraint: Option<&str>) -> &'static str {
     match constraint {
         Some("users_email_lower_key") => "このメールアドレスは既に登録されています",
         Some("accounts_user_name_key") => "同じ名前の口座が既に存在します",
+
+        // 💡 ここに追記（409 Conflict にマッピングされます）
+        Some("assets_user_symbol_key") => "このシンボルは既に登録されています",
+
         _ => "既に登録されている値です",
     }
 }
 
-
-fn check_message(constraint: Option<&str>) -> &'static str {
+fn check_message(constraint: Option<&str>) -> String {
+    // 💡 メッセージ構築のために戻り値を String にする、または既存に合わせて型を調整
     match constraint {
-        Some("accounts_currency_format") => "通貨コードは ISO 4217 の大文字3文字で指定してください",
-        Some("accounts_name_not_blank") => "口座名を空にはできません",
-        Some("accounts_withholding_only_tokutei") => {
-            "源泉徴収区分は特定口座のみ指定できます（特定口座では必須です）"
+        Some("accounts_currency_format") => {
+            "通貨コードは ISO 4217 の大文字3文字で指定してください".to_owned()
         }
-        _ => "入力値が制約を満たしていません",
+        Some("accounts_name_not_blank") => "口座名を空にはできません".to_owned(),
+        Some("accounts_withholding_only_tokutei") => {
+            "源泉徴収区分は特定口座のみ指定できます（特定口座では必須です）".to_owned()
+        }
+
+        // 💡 ここから下に追記（422 Unprocessable Entity にマッピングされます）
+        Some("assets_currency_format") => "通貨コードの形式が不正です".to_owned(),
+        Some("assets_name_not_blank") => "アセット名は空欄にできません".to_owned(),
+        Some("assets_symbol_not_blank") => "シンボルは空欄にできません".to_owned(),
+        Some("assets_price_unit_positive") => "価格単位は正の数である必要があります".to_owned(),
+        Some("asset_prices_price_non_negative") => "価格は0以上である必要があります".to_owned(),
+
+        _ => "入力値が制約を満たしていません".to_owned(),
     }
 }
 
 /// 個別に文言を差し替えたいときに使う
 pub trait OnConstraint<T> {
-    fn on_constraint(
-        self,
-        name: &str,
-        f: impl FnOnce() -> AppError,
-    ) -> Result<T, AppError>;
+    fn on_constraint(self, name: &str, f: impl FnOnce() -> AppError) -> Result<T, AppError>;
 }
 
 impl<T> OnConstraint<T> for Result<T, sqlx::Error> {
-    fn on_constraint(
-        self,
-        name: &str,
-        f: impl FnOnce() -> AppError,
-    ) -> Result<T, AppError> {
+    fn on_constraint(self, name: &str, f: impl FnOnce() -> AppError) -> Result<T, AppError> {
         self.map_err(|err| {
             if err.as_database_error().and_then(|e| e.constraint()) == Some(name) {
                 f()
@@ -217,10 +223,9 @@ impl IntoResponse for AppError {
         let empty: Vec<FieldError> = Vec::new();
         let (detail, errors) = match &self {
             // 5xx は内部情報を返さない
-            Self::Database(_) | Self::Internal(_) => (
-                "サーバー内部でエラーが発生しました".to_owned(),
-                &empty,
-            ),
+            Self::Database(_) | Self::Internal(_) => {
+                ("サーバー内部でエラーが発生しました".to_owned(), &empty)
+            }
             Self::UnprocessableEntity { detail, errors } => (detail.clone(), errors),
             other => (other.to_string(), &empty),
         };
@@ -234,7 +239,7 @@ impl IntoResponse for AppError {
             trace_id,
         };
 
-       let mut response = (
+        let mut response = (
             status,
             [(header::CONTENT_TYPE, "application/problem+json")],
             Json(body),
@@ -254,7 +259,10 @@ impl IntoResponse for AppError {
 
 impl FieldError {
     pub fn new(field: impl Into<String>, message: impl Into<String>) -> Self {
-        Self { field: field.into(), message: message.into() }
+        Self {
+            field: field.into(),
+            message: message.into(),
+        }
     }
 }
 

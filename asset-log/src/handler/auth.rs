@@ -1,4 +1,4 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 use serde::{Deserialize, Serialize};
 
 use crate::auth::{jwt::JwtKeys, password};
@@ -20,29 +20,26 @@ pub struct TokenResponse {
     pub expires_in: i64,
 }
 
+fn field_error(field: &str, message: &str) -> FieldError {
+    FieldError {
+        field: field.to_owned(),
+        message: message.to_owned(),
+    }
+}
 
 fn validate(c: &Credentials) -> Result<String, AppError> {
     let email = c.email.trim().to_lowercase();
     let mut errors: Vec<FieldError> = Vec::new();
 
-    let mut push = |field: &str, message: &str| {
-        errors.push(FieldError {
-            field: field.to_owned(),
-            message: message.to_owned(),
-        })
-    };
-
     if !email.contains('@') || email.len() > 254 {
-        push("email", "メールアドレスの形式が正しくありません");
+        errors.push(field_error("email", "メールアドレスの形式が正しくありません"));
     }
     if c.password.chars().count() < 12 {
-        push("password", "パスワードは12文字以上にしてください");
+        errors.push(field_error("password", "パスワードは12文字以上にしてください"));
     }
     if c.password.len() > 1024 {
-        push("password", "パスワードが長すぎます");
+        errors.push(field_error("password", "パスワードが長すぎます"));
     }
-
-    drop(push); // errors の可変借用を解放
 
     if errors.is_empty() {
         Ok(email)
@@ -53,6 +50,7 @@ fn validate(c: &Credentials) -> Result<String, AppError> {
         })
     }
 }
+
 
 pub async fn register(
     State(state): State<AppState>,
@@ -107,5 +105,9 @@ fn issue(keys: &JwtKeys, user_id: uuid::Uuid) -> Result<TokenResponse, AppError>
     let (access_token, expires_in) = keys
         .issue(user_id)
         .map_err(|e| AppError::Internal(anyhow::anyhow!(e)))?;
-    Ok(TokenResponse { access_token, token_type: "Bearer", expires_in })
+    Ok(TokenResponse {
+        access_token,
+        token_type: "Bearer",
+        expires_in,
+    })
 }
