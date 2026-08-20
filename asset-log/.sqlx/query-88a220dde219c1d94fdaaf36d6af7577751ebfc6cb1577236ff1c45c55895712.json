@@ -1,0 +1,164 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO transactions\n            (user_id, account_id, asset_id, kind, quantity, price, fee, traded_at, note)\n        VALUES ($1, $2, $3, $4::trade_kind, $5, $6, $7, $8, $9)\n        RETURNING\n            id, account_id, asset_id, kind AS \"kind: TradeKind\",\n            quantity, price, fee, traded_at, note, created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "account_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "asset_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "kind: TradeKind",
+        "type_info": {
+          "Custom": {
+            "name": "trade_kind",
+            "kind": {
+              "Enum": [
+                "buy",
+                "sell"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "quantity",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "quantity"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "price",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "price"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "fee",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "fee"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "traded_at",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "traded_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "note",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "note"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "trade_kind",
+            "kind": {
+              "Enum": [
+                "buy",
+                "sell"
+              ]
+            }
+          }
+        },
+        "Numeric",
+        "Numeric",
+        "Numeric",
+        "Date",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "88a220dde219c1d94fdaaf36d6af7577751ebfc6cb1577236ff1c45c55895712"
+}

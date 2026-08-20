@@ -163,7 +163,7 @@ pub async fn patch_asset(
         None => None,
     };
 
-        if let Some(u) = req.price_unit
+    if let Some(u) = req.price_unit
         && u <= Decimal::ZERO
     {
         return Err(AppError::field("price_unit", "must be positive"));

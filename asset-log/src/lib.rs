@@ -45,6 +45,14 @@ pub fn app(state: AppState) -> Router {
             "/prices/{asset_id}",
             get(handler::prices::get_price_history),
         )
+        .route(
+            "/transactions",
+            get(handler::transactions::list).post(handler::transactions::create),
+        )
+        .route(
+            "/transactions/{id}",
+            get(handler::transactions::show).delete(handler::transactions::delete),
+        )
         .with_state(state)
 }
 

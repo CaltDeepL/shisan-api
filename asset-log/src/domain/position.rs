@@ -15,7 +15,9 @@
 use rust_decimal::Decimal;
 
 /// 取引種別。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, sqlx::Type, serde::Serialize, serde::Deserialize)]
+#[sqlx(type_name = "trade_kind", rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum TradeKind {
     Buy,
     Sell,
@@ -35,11 +37,21 @@ pub struct Trade {
 
 impl Trade {
     pub fn buy(quantity: Decimal, price: Decimal, fee: Decimal) -> Self {
-        Self { kind: TradeKind::Buy, quantity, price, fee }
+        Self {
+            kind: TradeKind::Buy,
+            quantity,
+            price,
+            fee,
+        }
     }
 
     pub fn sell(quantity: Decimal, price: Decimal, fee: Decimal) -> Self {
-        Self { kind: TradeKind::Sell, quantity, price, fee }
+        Self {
+            kind: TradeKind::Sell,
+            quantity,
+            price,
+            fee,
+        }
     }
 }
 
@@ -243,7 +255,11 @@ mod tests {
         let holding = build_holding(&trades, UNIT_SHARE).unwrap();
 
         assert_eq!(holding.quantity, dec!(150));
-        assert_eq!(holding.avg_cost, dec!(1200), "売却では平均取得単価は変わらない");
+        assert_eq!(
+            holding.avg_cost,
+            dec!(1200),
+            "売却では平均取得単価は変わらない"
+        );
         assert_eq!(holding.book_value, dec!(180000)); // 240000 - 60000
         assert_eq!(holding.realized_pnl, dec!(15000)); // 75000 - 60000
     }
@@ -306,8 +322,11 @@ mod tests {
     #[test]
     fn evaluate_handles_price_unit_for_shares_and_funds() {
         // 株式: 1株1000円で100株 → 現在1250円
-        let shares = build_holding(&[Trade::buy(dec!(100), dec!(1000), Decimal::ZERO)], UNIT_SHARE)
-            .unwrap();
+        let shares = build_holding(
+            &[Trade::buy(dec!(100), dec!(1000), Decimal::ZERO)],
+            UNIT_SHARE,
+        )
+        .unwrap();
         let v = evaluate(&shares, dec!(1250), UNIT_SHARE);
 
         assert_eq!(v.market_value, dec!(125000));
@@ -315,9 +334,11 @@ mod tests {
         assert_eq!(v.unrealized_pnl_rate, Some(dec!(0.25)));
 
         // 投信: 基準価額12000円(10,000口あたり)で50,000口 → 現在15000円
-        let fund =
-            build_holding(&[Trade::buy(dec!(50000), dec!(12000), Decimal::ZERO)], unit_fund())
-                .unwrap();
+        let fund = build_holding(
+            &[Trade::buy(dec!(50000), dec!(12000), Decimal::ZERO)],
+            unit_fund(),
+        )
+        .unwrap();
         let v = evaluate(&fund, dec!(15000), unit_fund());
 
         assert_eq!(fund.book_value, dec!(60000));
@@ -336,7 +357,13 @@ mod tests {
 
         let err = build_holding(&trades, UNIT_SHARE).unwrap_err();
 
-        assert_eq!(err, PositionError::Oversell { requested: dec!(101), held: dec!(100) });
+        assert_eq!(
+            err,
+            PositionError::Oversell {
+                requested: dec!(101),
+                held: dec!(100)
+            }
+        );
     }
 
     // --- 以下は完了条件の8ケースに対する追加の防御的テスト ---
@@ -346,7 +373,10 @@ mod tests {
         let holding = build_holding(&[], UNIT_SHARE).unwrap();
 
         assert_eq!(holding, Holding::default());
-        assert_eq!(evaluate(&holding, dec!(1000), UNIT_SHARE).unrealized_pnl_rate, None);
+        assert_eq!(
+            evaluate(&holding, dec!(1000), UNIT_SHARE).unrealized_pnl_rate,
+            None
+        );
     }
 
     #[test]

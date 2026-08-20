@@ -32,10 +32,16 @@ fn validate(c: &Credentials) -> Result<String, AppError> {
     let mut errors: Vec<FieldError> = Vec::new();
 
     if !email.contains('@') || email.len() > 254 {
-        errors.push(field_error("email", "メールアドレスの形式が正しくありません"));
+        errors.push(field_error(
+            "email",
+            "メールアドレスの形式が正しくありません",
+        ));
     }
     if c.password.chars().count() < 12 {
-        errors.push(field_error("password", "パスワードは12文字以上にしてください"));
+        errors.push(field_error(
+            "password",
+            "パスワードは12文字以上にしてください",
+        ));
     }
     if c.password.len() > 1024 {
         errors.push(field_error("password", "パスワードが長すぎます"));
@@ -50,7 +56,6 @@ fn validate(c: &Credentials) -> Result<String, AppError> {
         })
     }
 }
-
 
 pub async fn register(
     State(state): State<AppState>,
