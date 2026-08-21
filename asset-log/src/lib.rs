@@ -54,6 +54,7 @@ pub fn app(state: AppState) -> Router {
             get(handler::transactions::show).delete(handler::transactions::delete),
         )
         .route("/holdings", get(handler::holdings::list))
+        .route("/fx/rates", get(handler::fx::get_rate))
         .with_state(state)
 }
 

@@ -41,6 +41,10 @@ pub enum AppError {
         errors: Vec<FieldError>,
     },
 
+    /// 503: 外部APIなど依存先が一時的に利用できない
+    #[error("{0}")]
+    ServiceUnavailable(String),
+
     /// 500: 分類できなかった DB エラー
     #[error("database error")]
     Database(#[source] sqlx::Error),
@@ -64,13 +68,16 @@ impl AppError {
         }
     }
 
+    pub fn service_unavailable(detail: impl Into<String>) -> Self {
+        Self::ServiceUnavailable(detail.into())
+    }
+
     pub fn field(field: impl Into<String>, message: impl Into<String>) -> Self {
-        let message = message.into();
         Self::UnprocessableEntity {
             detail: "入力値が不正です".to_owned(),
             errors: vec![FieldError {
                 field: field.into(),
-                message,
+                message: message.into(),
             }],
         }
     }
@@ -78,25 +85,28 @@ impl AppError {
     fn status(&self) -> StatusCode {
         match self {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-            Self::Unauthorized | Self::InvalidCredentials => StatusCode::UNAUTHORIZED,
+            Self::InvalidCredentials | Self::Unauthorized => StatusCode::UNAUTHORIZED,
             Self::Forbidden => StatusCode::FORBIDDEN,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::Conflict(_) => StatusCode::CONFLICT,
             Self::UnprocessableEntity { .. } => StatusCode::UNPROCESSABLE_ENTITY,
+            Self::ServiceUnavailable(_) => StatusCode::SERVICE_UNAVAILABLE,
             Self::Database(_) | Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
-    /// RFC 9457 の `type`。安定した識別子としてクライアントが分岐に使える
+    /// RFC 9457 の `type`。
+    /// 安定した識別子としてクライアントが分岐に使える
     fn error_type(&self) -> &'static str {
         match self {
             Self::BadRequest(_) => "bad-request",
-            Self::Unauthorized => "unauthorized",
             Self::InvalidCredentials => "invalid-credentials",
+            Self::Unauthorized => "unauthorized",
             Self::Forbidden => "forbidden",
             Self::NotFound(_) => "not-found",
             Self::Conflict(_) => "conflict",
             Self::UnprocessableEntity { .. } => "unprocessable-entity",
+            Self::ServiceUnavailable(_) => "service-unavailable",
             Self::Database(_) | Self::Internal(_) => "internal-error",
         }
     }
@@ -104,16 +114,16 @@ impl AppError {
     fn title(&self) -> &'static str {
         match self {
             Self::BadRequest(_) => "Bad Request",
-            Self::Unauthorized | Self::InvalidCredentials => "Unauthorized",
+            Self::InvalidCredentials | Self::Unauthorized => "Unauthorized",
             Self::Forbidden => "Forbidden",
             Self::NotFound(_) => "Not Found",
             Self::Conflict(_) => "Conflict",
             Self::UnprocessableEntity { .. } => "Unprocessable Entity",
+            Self::ServiceUnavailable(_) => "Service Unavailable",
             Self::Database(_) | Self::Internal(_) => "Internal Server Error",
         }
     }
 }
-
 // ---------- sqlx::Error の分類 ----------
 
 impl From<sqlx::Error> for AppError {
@@ -137,6 +147,26 @@ impl From<sqlx::Error> for AppError {
             }
             Some(sqlstate::NOT_NULL_VIOLATION) => Self::unprocessable("必須項目が未入力です"),
             _ => Self::Database(err),
+        }
+    }
+}
+
+// ---------- FxError の分類 ----------
+
+impl From<crate::provider::fx::FxError> for AppError {
+    fn from(err: crate::provider::fx::FxError) -> Self {
+        use crate::provider::fx::FxError;
+        match err {
+            FxError::UnsupportedPair { .. } => {
+                Self::unprocessable("指定された通貨ペアは為替レートの取得に対応していません")
+            }
+            FxError::Unavailable { .. } => Self::service_unavailable(
+                "為替レートを取得できませんでした。時間をおいて再度お試しください",
+            ),
+            FxError::Transient(_) | FxError::Upstream(_) => {
+                Self::service_unavailable("為替レートの取得に失敗しました")
+            }
+            FxError::Database(e) => Self::from(e),
         }
     }
 }
