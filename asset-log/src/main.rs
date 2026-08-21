@@ -1,14 +1,15 @@
-use crate::auth::jwt::JwtKeys;
+use asset_log::auth::jwt::JwtKeys;
+use asset_log::provider::{
+    cached_fx::{CachedFxProvider, StalePolicy},
+    fx::FrankfurterClient,
+};
 use asset_log::{auth, config, state};
-
 use clap::{Parser, Subcommand};
 use config::Config;
 use sqlx::postgres::PgPoolOptions;
 use state::AppState;
-use std::process;
-use std::time::Duration;
+use std::{process, sync::Arc, time::Duration};
 use tracing_subscriber::EnvFilter;
-
 #[derive(Parser)]
 #[command(name = "asset-log")]
 struct Cli {
@@ -85,7 +86,23 @@ async fn run_server() {
         .expect("failed to run migrations");
 
     let jwt = JwtKeys::new(&config.jwt_secret, config.jwt_ttl_minutes);
-    let state = AppState { db: pool, jwt };
+
+    let fx_client = FrankfurterClient::new(
+        &config.fx_api_base_url,
+        Duration::from_millis(config.fx_timeout_ms),
+    )
+    .expect("failed to build FX HTTP client");
+
+    let fx = Arc::new(CachedFxProvider::new(
+        fx_client,
+        pool.clone(),
+        StalePolicy {
+            max_calendar_days: config.fx_max_calendar_days,
+            max_business_days: config.fx_max_business_days,
+        },
+    ));
+
+    let state = AppState { db: pool, jwt, fx };
 
     let app = asset_log::app(state);
 

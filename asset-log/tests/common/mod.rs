@@ -1,4 +1,11 @@
-use asset_log::{auth::jwt::JwtKeys, state::AppState};
+use asset_log::{
+    auth::jwt::JwtKeys,
+    provider::{
+        cached_fx::{CachedFxProvider, StalePolicy},
+        fx::FrankfurterClient,
+    },
+    state::AppState,
+};
 use axum::{
     Router,
     body::Body,
@@ -10,10 +17,24 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-/// テスト用のルータを組む。JWT の鍵はテスト内で固定
+use std::{sync::Arc, time::Duration};
+
+/// テスト用のルータを組む。JWT の鍵はテスト内で固定。
+/// 外部APIは到達不能なURLを指すので、fx を叩かないテストはこれで足りる。
 pub fn test_app(db: PgPool) -> Router {
+    test_app_with_fx(db, "http://127.0.0.1:1/unreachable", StalePolicy::default())
+}
+
+/// 為替のテスト用。`fx_base_url` に wiremock のURLを渡す。
+#[allow(dead_code)]
+pub fn test_app_with_fx(db: PgPool, fx_base_url: &str, policy: StalePolicy) -> Router {
     let jwt = JwtKeys::new("test-secret-for-integration-tests", 60);
-    asset_log::app(AppState { db, jwt })
+
+    let client = FrankfurterClient::new(fx_base_url, Duration::from_millis(500))
+        .expect("failed to build FX client");
+    let fx = Arc::new(CachedFxProvider::new(client, db.clone(), policy));
+
+    asset_log::app(AppState { db, jwt, fx })
 }
 
 pub struct TestUser {

@@ -2,6 +2,7 @@ pub mod accounts;
 pub mod analytics;
 pub mod assets;
 pub mod auth;
+pub mod fx;
 pub mod health;
 pub mod holdings;
 pub mod prices;

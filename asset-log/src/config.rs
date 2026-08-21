@@ -4,6 +4,10 @@ pub struct Config {
     pub port: u16,
     pub jwt_secret: String,
     pub jwt_ttl_minutes: i64,
+    pub fx_api_base_url: String,   // 既定 https://api.frankfurter.dev/v1
+    pub fx_timeout_ms: u64,        // 既定 3000
+    pub fx_max_calendar_days: i64, // 既定 4
+    pub fx_max_business_days: i64, // 既定 2
 }
 
 impl Config {
@@ -17,6 +21,17 @@ impl Config {
             );
         }
         Ok(Self {
+            fx_api_base_url: std::env::var("FX_API_BASE_URL")
+                .unwrap_or_else(|_| "https://api.frankfurter.dev/v1".into()),
+            fx_timeout_ms: std::env::var("FX_TIMEOUT_MS")
+                .unwrap_or_else(|_| "3000".into())
+                .parse()?,
+            fx_max_calendar_days: std::env::var("FX_MAX_CALENDAR_DAYS")
+                .unwrap_or_else(|_| "4".into())
+                .parse()?,
+            fx_max_business_days: std::env::var("FX_MAX_BUSINESS_DAYS")
+                .unwrap_or_else(|_| "2".into())
+                .parse()?,
             database_url: std::env::var("DATABASE_URL")?,
             port: std::env::var("PORT")
                 .unwrap_or_else(|_| "8080".into())
