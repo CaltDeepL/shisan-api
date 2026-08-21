@@ -183,7 +183,7 @@ HEALTHCHECK CMD ["./asset-log", "healthcheck"]
 | 6 | 銘柄・価格 | 完了 |
 | 7 | `domain::position`（総平均法・評価損益） | 完了 |
 | 8 | 取引 CRUD | 完了 |
-| 9 | `/holdings` エンドポイント | 未着手 |
+| 9 | `/holdings` エンドポイント | 完了 |
 | 10 | FxRateProvider（Frankfurter） | 未着手 |
 | 11 | analytics（XIRR） | 未着手 |
 | 12 | CSV インポート | 未着手 |

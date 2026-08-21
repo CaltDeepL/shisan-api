@@ -102,7 +102,7 @@ pub async fn create(
     .await?;
 
     if !ctx.account_exists {
-        return Err(AppError::NotFound("口座が見つかりません"));
+        return Err(AppError::NotFound("口座"));
     }
     let Some(price_unit) = ctx.price_unit else {
         return Err(AppError::NotFound("銘柄が見つかりません"));
@@ -144,7 +144,7 @@ pub async fn list(
     user: AuthUser,
     Query(query): Query<ListQuery>,
 ) -> Result<Json<Vec<TransactionResponse>>, AppError> {
-    #[allow(clippy::collapsible_if)] 
+    #[allow(clippy::collapsible_if)]
     if let (Some(from), Some(to)) = (query.from, query.to) {
         if from > to {
             return Err(AppError::field(

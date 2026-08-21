@@ -53,6 +53,7 @@ pub fn app(state: AppState) -> Router {
             "/transactions/{id}",
             get(handler::transactions::show).delete(handler::transactions::delete),
         )
+        .route("/holdings", get(handler::holdings::list))
         .with_state(state)
 }
 

@@ -1,0 +1,211 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            t.account_id   AS \"account_id!\",\n            a.name         AS \"account_name!\",\n            a.account_type AS \"account_type!: AccountType\",\n            t.asset_id     AS \"asset_id!\",\n            s.symbol       AS \"symbol!\",\n            s.name         AS \"asset_name!\",\n            s.asset_class  AS \"asset_class!: AssetClass\",\n            s.currency     AS \"currency!\",\n            s.price_unit   AS \"price_unit!\",\n            t.kind         AS \"kind!: TradeKind\",\n            t.quantity     AS \"quantity!\",\n            t.price        AS \"price!\",\n            t.fee          AS \"fee!\"\n        FROM transactions t\n        JOIN accounts a ON a.id = t.account_id\n        JOIN assets   s ON s.id = t.asset_id\n        WHERE t.user_id = $1\n          AND ($2::uuid IS NULL OR t.account_id = $2)\n        ORDER BY t.account_id, t.asset_id, t.traded_at, t.created_at, t.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "account_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "account_name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "accounts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "account_type!: AccountType",
+        "type_info": {
+          "Custom": {
+            "name": "account_type",
+            "kind": {
+              "Enum": [
+                "tokutei",
+                "ippan",
+                "nisa_tsumitate",
+                "nisa_growth",
+                "ideco",
+                "bank"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "accounts",
+            "name": "account_type"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "asset_id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "symbol!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "symbol"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "asset_name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "asset_class!: AssetClass",
+        "type_info": {
+          "Custom": {
+            "name": "asset_class",
+            "kind": {
+              "Enum": [
+                "equity",
+                "etf",
+                "mutual_fund",
+                "bond",
+                "cash",
+                "other"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "asset_class"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "currency!",
+        "type_info": "Bpchar",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "currency"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "price_unit!",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "price_unit"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "kind!: TradeKind",
+        "type_info": {
+          "Custom": {
+            "name": "trade_kind",
+            "kind": {
+              "Enum": [
+                "buy",
+                "sell"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "quantity!",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "quantity"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "price!",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "price"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "fee!",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "fee"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "cf645ba8c99ae69687f6ecc923be61d8749c16fb2543a269b807db90779389c2"
+}
