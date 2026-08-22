@@ -120,48 +120,63 @@ pub fn build_holding(trades: &[Trade], price_unit: Decimal) -> Result<Holding, P
     }
 
     let mut holding = Holding::default();
-
     for trade in trades {
-        validate(trade)?;
+        apply_trade(&mut holding, trade, price_unit)?;
+    }
+    Ok(holding)
+}
 
-        // 呼値 → 実際の金額へ換算
-        let gross = trade.quantity * trade.price / price_unit;
+/// 保有状態を1取引ぶん進める。`build_holding` はこれの畳み込みとして定義される。
+///
+/// 日付ごとのスナップショットが欲しい呼び出し側（資産推移・日次バッチ）は、
+/// 取引列を1パスで舐めながら日付境界で `Holding` を複製する。
+pub fn apply_trade(
+    holding: &mut Holding,
+    trade: &Trade,
+    price_unit: Decimal,
+) -> Result<(), PositionError> {
+    if price_unit <= Decimal::ZERO {
+        return Err(PositionError::NonPositivePriceUnit(price_unit));
+    }
+    validate(trade)?;
 
-        match trade.kind {
-            TradeKind::Buy => {
-                holding.quantity += trade.quantity;
-                holding.book_value += gross + trade.fee;
-            }
-            TradeKind::Sell => {
-                if trade.quantity > holding.quantity {
-                    return Err(PositionError::Oversell {
-                        requested: trade.quantity,
-                        held: holding.quantity,
-                    });
-                }
+    // 呼値 → 実際の金額へ換算
+    let gross = trade.quantity * trade.price / price_unit;
 
-                // 売却分の取得原価は「簿価 × 売却割合」で按分する。
-                // avg_cost 経由で計算すると割り切れない場合に誤差が残るため、
-                // 簿価から直接按分して簿価の整合性を保つ。
-                let cost_of_sold = holding.book_value * trade.quantity / holding.quantity;
-                let proceeds = gross - trade.fee;
-
-                holding.realized_pnl += proceeds - cost_of_sold;
-                holding.quantity -= trade.quantity;
-                holding.book_value -= cost_of_sold;
-            }
+    match trade.kind {
+        TradeKind::Buy => {
+            holding.quantity += trade.quantity;
+            holding.book_value += gross + trade.fee;
         }
+        TradeKind::Sell => {
+            if trade.quantity > holding.quantity {
+                return Err(PositionError::Oversell {
+                    requested: trade.quantity,
+                    held: holding.quantity,
+                });
+            }
 
-        // 平均単価は毎回 簿価 ÷ 数量 から引き直す（逐次更新による誤差の蓄積を避ける）
-        holding.avg_cost = if holding.quantity.is_zero() {
-            holding.book_value = Decimal::ZERO; // 全売却時は端数を残さずリセット
-            Decimal::ZERO
-        } else {
-            holding.book_value / holding.quantity * price_unit
-        };
+            // 売却分の取得原価は「簿価 × 売却割合」で按分する。
+            // avg_cost 経由で計算すると割り切れない場合に誤差が残るため、
+            // 簿価から直接按分して簿価の整合性を保つ。
+            let cost_of_sold = holding.book_value * trade.quantity / holding.quantity;
+            let proceeds = gross - trade.fee;
+
+            holding.realized_pnl += proceeds - cost_of_sold;
+            holding.quantity -= trade.quantity;
+            holding.book_value -= cost_of_sold;
+        }
     }
 
-    Ok(holding)
+    // 平均単価は毎回 簿価 ÷ 数量 から引き直す（逐次更新による誤差の蓄積を避ける）
+    holding.avg_cost = if holding.quantity.is_zero() {
+        holding.book_value = Decimal::ZERO; // 全売却時は端数を残さずリセット
+        Decimal::ZERO
+    } else {
+        holding.book_value / holding.quantity * price_unit
+    };
+
+    Ok(())
 }
 
 /// 保有状態に現在価格を当てて評価損益を求める。

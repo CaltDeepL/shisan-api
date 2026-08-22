@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT rated_on, rate, fetched_at\n        FROM fx_rates\n        WHERE base = $1 AND quote = $2 AND rated_on <= $3\n        ORDER BY rated_on DESC\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rated_on",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "fx_rates",
+            "name": "rated_on"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "rate",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "fx_rates",
+            "name": "rate"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "fetched_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "fx_rates",
+            "name": "fetched_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Bpchar",
+        "Date"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fdcb60f4f1b8abe43f24d93af189f21065c3fac1ab023aec4030c1d68472747e"
+}

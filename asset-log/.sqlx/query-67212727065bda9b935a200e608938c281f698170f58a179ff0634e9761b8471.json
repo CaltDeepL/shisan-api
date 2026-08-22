@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH spine AS (\n            SELECT d::date AS on_date\n            FROM generate_series($2::date, $3::date, interval '1 day') AS d\n            WHERE $4::text = 'day'\n               OR d::date = $2::date\n               OR d::date = $3::date\n               OR d::date = (date_trunc('month', d) + interval '1 month - 1 day')::date\n        ),\n        held AS (\n            SELECT DISTINCT asset_id\n            FROM transactions\n            WHERE user_id = $1 AND traded_at <= $3\n        )\n        SELECT\n            sp.on_date    AS \"on_date!\",\n            h.asset_id    AS \"asset_id!\",\n            p.price       AS \"price?\",\n            p.priced_on   AS \"priced_on?\"\n        FROM spine sp\n        CROSS JOIN held h\n        LEFT JOIN LATERAL (\n            SELECT price, priced_on\n            FROM asset_prices\n            WHERE asset_id = h.asset_id AND priced_on <= sp.on_date\n            ORDER BY priced_on DESC\n            LIMIT 1\n        ) p ON true\n        ORDER BY sp.on_date, h.asset_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "on_date!",
+        "type_info": "Date",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "asset_id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "transactions",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "price?",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "asset_prices",
+            "name": "price"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "priced_on?",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "asset_prices",
+            "name": "priced_on"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date",
+        "Date",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "67212727065bda9b935a200e608938c281f698170f58a179ff0634e9761b8471"
+}

@@ -18,6 +18,12 @@ pub struct FxRate {
     pub is_stale: bool,
     pub fetched_at: chrono::DateTime<chrono::Utc>,
 }
+/// 期間内の全レート。ECB休場日は行そのものが存在しない。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FxRatePoint {
+    pub rated_on: NaiveDate,
+    pub rate: Decimal,
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum FxError {
@@ -49,8 +55,16 @@ impl FxError {
 pub trait FxRateProvider: Send + Sync {
     async fn rate(&self, base: Currency, quote: Currency, on: NaiveDate)
     -> Result<FxRate, FxError>;
-}
 
+    /// 期間一括取得。キャッシュ判定と保存は呼び出し側の責務。
+    async fn rates_in_range(
+        &self,
+        base: Currency,
+        quote: Currency,
+        from: NaiveDate,
+        to: NaiveDate,
+    ) -> Result<Vec<FxRatePoint>, FxError>;
+}
 // ---------------------------------------------------------------- Frankfurter
 
 pub struct FrankfurterClient {
@@ -65,6 +79,10 @@ struct FrankfurterResponse {
     #[allow(dead_code)]
     base: String,
     rates: HashMap<String, Decimal>,
+}
+#[derive(serde::Deserialize)]
+struct RangeResponse {
+    rates: HashMap<String, HashMap<String, Decimal>>,
 }
 
 impl FrankfurterClient {
@@ -167,5 +185,67 @@ impl FxRateProvider for FrankfurterClient {
         }
 
         Err(last)
+    }
+
+    async fn rates_in_range(
+        &self,
+        base: Currency,
+        quote: Currency,
+        from: NaiveDate,
+        to: NaiveDate,
+    ) -> Result<Vec<FxRatePoint>, FxError> {
+        // 同一通貨は呼び出し側(③)で除外する前提。念のため空を返す
+        if base == quote {
+            return Ok(Vec::new());
+        }
+
+        let url = format!(
+            "{}/{}..{}?base={}&symbols={}",
+            self.base_url,
+            from.format("%Y-%m-%d"),
+            to.format("%Y-%m-%d"),
+            base,
+            quote
+        );
+
+        let resp = self
+            .http
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| FxError::Transient(e.to_string()))?;
+
+        let status = resp.status();
+        if status.is_server_error() {
+            return Err(FxError::Transient(format!("upstream returned {status}")));
+        }
+        if status == reqwest::StatusCode::NOT_FOUND
+            || status == reqwest::StatusCode::UNPROCESSABLE_ENTITY
+        {
+            return Err(FxError::UnsupportedPair { base, quote });
+        }
+        if !status.is_success() {
+            return Err(FxError::Upstream(format!("upstream returned {status}")));
+        }
+
+        let body: RangeResponse = resp
+            .json()
+            .await
+            .map_err(|e| FxError::Upstream(format!("invalid response body: {e}")))?;
+
+        let mut out = Vec::with_capacity(body.rates.len());
+        for (day, pairs) in body.rates {
+            let rated_on = day
+                .parse::<NaiveDate>()
+                .map_err(|_| FxError::Upstream(format!("bad date key: {day}")))?;
+            let Some(&rate) = pairs.get(quote.as_str()) else {
+                continue; // 要求通貨が欠けている日はスキップ
+            };
+            if rate > Decimal::ZERO {
+                out.push(FxRatePoint { rated_on, rate });
+            }
+        }
+        out.sort_by_key(|p| p.rated_on);
+        Ok(out)
     }
 }
