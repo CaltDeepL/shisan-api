@@ -5,7 +5,7 @@ use sqlx::PgPool;
 
 use crate::{
     domain::currency::Currency,
-    provider::fx::{FxError, FxRate, FxRateProvider},
+    provider::fx::{FxError, FxRate, FxRatePoint, FxRateProvider},
     repository::fx_repo,
 };
 
@@ -133,5 +133,16 @@ impl<P: FxRateProvider> FxRateProvider for CachedFxProvider<P> {
             }
             Err(e) => Err(e),
         }
+    }
+
+    /// 期間取得はキャッシュ判定を service 層に委ねるため素通しする。
+    async fn rates_in_range(
+        &self,
+        base: Currency,
+        quote: Currency,
+        from: NaiveDate,
+        to: NaiveDate,
+    ) -> Result<Vec<FxRatePoint>, FxError> {
+        self.inner.rates_in_range(base, quote, from, to).await
     }
 }

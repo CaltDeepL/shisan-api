@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fx_rates (base, quote, rated_on, rate)\n        SELECT $1::char(3), $2::char(3), t.d, t.r\n        FROM unnest($3::date[], $4::numeric[]) AS t(d, r)\n        ON CONFLICT (base, quote, rated_on)\n        DO UPDATE SET rate = EXCLUDED.rate, fetched_at = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Bpchar",
+        "DateArray",
+        "NumericArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "49337508e4be4e320b660f47d0c8d3695a0dac7a5ab05eafa1f8d745fc81b9a0"
+}

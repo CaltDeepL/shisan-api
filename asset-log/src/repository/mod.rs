@@ -1,4 +1,5 @@
 pub mod account_repo;
+pub mod analytics_repo;
 pub mod asset_repo;
 pub mod fx_repo;
 pub mod holding_repo;

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fx_rates (base, quote, rated_on, rate)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (base, quote, rated_on)\n        DO UPDATE SET rate = EXCLUDED.rate, fetched_at = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Bpchar",
+        "Date",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "edfec871ef97212dfa5a7e21d1d4fd73fb980c5fa9058ac87b3ad41e9ba4b9ba"
+}

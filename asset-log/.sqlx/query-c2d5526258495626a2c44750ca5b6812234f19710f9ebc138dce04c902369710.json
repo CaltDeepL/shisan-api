@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH r AS (\n            SELECT rated_on FROM fx_rates\n            WHERE base = $1 AND quote = $2 AND rated_on BETWEEN $3 AND $4\n        ),\n        g AS (\n            SELECT rated_on - lag(rated_on) OVER (ORDER BY rated_on) AS gap FROM r\n        )\n        SELECT\n            (SELECT max(rated_on) FROM fx_rates\n              WHERE base = $1 AND quote = $2 AND rated_on <= $3) AS \"seed_on?\",\n            (SELECT max(rated_on) FROM r) AS \"newest_on?\",\n            (SELECT max(gap) FROM g)      AS \"max_gap?\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "seed_on?",
+        "type_info": "Date",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "newest_on?",
+        "type_info": "Date",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "max_gap?",
+        "type_info": "Int4",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Bpchar",
+        "Date",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c2d5526258495626a2c44750ca5b6812234f19710f9ebc138dce04c902369710"
+}
