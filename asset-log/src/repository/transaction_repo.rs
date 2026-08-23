@@ -31,6 +31,7 @@ pub struct Transaction {
     pub fee: Decimal,
     pub traded_at: NaiveDate,
     pub note: Option<String>,
+    pub external_id: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -46,6 +47,7 @@ pub struct NewTransaction {
     pub fee: Decimal,
     pub traded_at: NaiveDate,
     pub note: Option<String>,
+    pub external_id: Option<String>,
 }
 
 /// 一覧の絞り込み条件。`None` はその条件を使わない。
@@ -154,11 +156,11 @@ pub async fn insert(
         Transaction,
         r#"
         INSERT INTO transactions
-            (user_id, account_id, asset_id, kind, quantity, price, fee, traded_at, note)
-        VALUES ($1, $2, $3, $4::trade_kind, $5, $6, $7, $8, $9)
+            (user_id, account_id, asset_id, kind, quantity, price, fee, traded_at, note, external_id)
+        VALUES ($1, $2, $3, $4::trade_kind, $5, $6, $7, $8, $9, $10)
         RETURNING
             id, account_id, asset_id, kind AS "kind: TradeKind",
-            quantity, price, fee, traded_at, note, created_at
+            quantity, price, fee, traded_at, note, external_id, created_at
         "#,
         new.user_id,
         new.account_id,
@@ -169,6 +171,7 @@ pub async fn insert(
         new.fee,
         new.traded_at,
         new.note.as_deref(),
+        new.external_id.as_deref(),
     )
     .fetch_one(conn)
     .await
@@ -184,7 +187,7 @@ pub async fn find_by_id(
         r#"
         SELECT
             id, account_id, asset_id, kind AS "kind: TradeKind",
-            quantity, price, fee, traded_at, note, created_at
+            quantity, price, fee, traded_at, note, external_id, created_at
         FROM transactions
         WHERE id = $1 AND user_id = $2
         "#,
@@ -206,7 +209,7 @@ pub async fn list(
         r#"
         SELECT
             id, account_id, asset_id, kind AS "kind: TradeKind",
-            quantity, price, fee, traded_at, note, created_at
+            quantity, price, fee, traded_at, note, external_id, created_at
         FROM transactions
         WHERE user_id = $1
           AND ($2::uuid IS NULL OR account_id = $2)
@@ -238,4 +241,46 @@ pub async fn delete(conn: &mut PgConnection, user_id: Uuid, id: Uuid) -> Result<
     .await?;
 
     Ok(result.rows_affected() > 0)
+}
+/// 重複取引の判定。external_id があればそれを第一キーに、無ければ内容の複合一致で見る。
+#[allow(clippy::too_many_arguments)]
+pub async fn find_duplicate(
+    db: &PgPool,
+    user_id: Uuid,
+    external_id: Option<&str>,
+    account_id: Uuid,
+    asset_id: Uuid,
+    kind: TradeKind,
+    quantity: Decimal,
+    price: Decimal,
+    traded_at: NaiveDate,
+) -> Result<bool, sqlx::Error> {
+    if let Some(ext_id) = external_id {
+        return sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM transactions WHERE user_id = $1 AND external_id = $2
+            ) AS "exists!""#,
+            user_id,
+            ext_id,
+        )
+        .fetch_one(db)
+        .await;
+    }
+
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+            SELECT 1 FROM transactions
+            WHERE user_id = $1 AND account_id = $2 AND asset_id = $3
+              AND kind = $4::trade_kind AND quantity = $5 AND price = $6 AND traded_at = $7
+        ) AS "exists!""#,
+        user_id,
+        account_id,
+        asset_id,
+        kind as TradeKind,
+        quantity,
+        price,
+        traded_at,
+    )
+    .fetch_one(db)
+    .await
 }

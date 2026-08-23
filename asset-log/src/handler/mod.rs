@@ -5,5 +5,6 @@ pub mod auth;
 pub mod fx;
 pub mod health;
 pub mod holdings;
+pub mod import;
 pub mod prices;
 pub mod transactions;

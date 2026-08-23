@@ -1,3 +1,4 @@
+use crate::domain::position::PositionError;
 use axum::{
     Json,
     http::{HeaderValue, StatusCode, header},
@@ -5,7 +6,6 @@ use axum::{
 };
 use serde::Serialize;
 use uuid::Uuid;
-
 /// Postgres SQLSTATE（https://www.postgresql.org/docs/current/errcodes-appendix.html）
 mod sqlstate {
     pub const NOT_NULL_VIOLATION: &str = "23502";
@@ -293,6 +293,14 @@ impl FieldError {
             field: field.into(),
             message: message.into(),
         }
+    }
+}
+
+impl From<PositionError> for AppError {
+    /// `PositionError` はすべて入力起因なので422に落とす。
+    /// メッセージは thiserror の Display をそのまま使う。
+    fn from(err: PositionError) -> Self {
+        AppError::unprocessable(err.to_string())
     }
 }
 

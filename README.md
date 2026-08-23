@@ -187,7 +187,7 @@ HEALTHCHECK CMD ["./asset-log", "healthcheck"]
 | 10 | FxRateProvider（Frankfurter） | 完了 |
 | 11 | analytics（XIRR） | 完了 |
 | 12 | CSV インポート | 完了 |
-| 13 | 日次スナップショット | 未着手 |
+| 13 | 日次スナップショット | 完了 |
 | 14 | OpenAPI（utoipa） | 未着手 |
 | 15 | GitHub Actions | 未着手 |
 | 16 | デプロイ | 未着手 |
