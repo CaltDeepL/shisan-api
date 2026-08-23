@@ -12,7 +12,10 @@ use crate::domain::position::TradeKind;
 pub struct HistoryTrade {
     pub account_id: Uuid,
     pub asset_id: Uuid,
+    pub account_name: String,
     pub account_type: AccountType,
+    pub symbol: String,
+    pub asset_name: String,
     pub asset_class: AssetClass,
     pub currency: String,
     pub price_unit: Decimal,
@@ -43,7 +46,10 @@ pub async fn fetch_trades_until(
         SELECT
             t.account_id,
             t.asset_id,
+            a.name         AS account_name,
             a.account_type AS "account_type: AccountType",
+            s.symbol,
+            s.name         AS asset_name,
             s.asset_class  AS "asset_class: AssetClass",
             s.currency,
             s.price_unit,

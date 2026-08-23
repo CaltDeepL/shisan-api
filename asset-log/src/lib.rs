@@ -22,6 +22,7 @@ pub fn app(state: AppState) -> Router {
         .route("/auth/register", post(handler::auth::register))
         .route("/auth/login", post(handler::auth::login))
         .route("/me", get(handler::auth::me))
+        .route("/analytics/allocation", get(handler::analytics::allocation))
         .route(
             "/analytics/asset-history",
             get(handler::analytics::asset_history),

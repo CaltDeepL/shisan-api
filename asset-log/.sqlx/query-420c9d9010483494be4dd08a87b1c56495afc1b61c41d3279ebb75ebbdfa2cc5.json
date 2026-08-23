@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            t.account_id,\n            t.asset_id,\n            a.account_type AS \"account_type: AccountType\",\n            s.asset_class  AS \"asset_class: AssetClass\",\n            s.currency,\n            s.price_unit,\n            t.kind         AS \"kind: TradeKind\",\n            t.quantity,\n            t.price,\n            t.fee,\n            t.traded_at\n        FROM transactions t\n        JOIN accounts a ON a.id = t.account_id\n        JOIN assets   s ON s.id = t.asset_id\n        WHERE t.user_id = $1 AND t.traded_at <= $2\n        ORDER BY t.traded_at, t.created_at, t.id\n        ",
+  "query": "\n        SELECT\n            t.account_id,\n            t.asset_id,\n            a.name         AS account_name,\n            a.account_type AS \"account_type: AccountType\",\n            s.symbol,\n            s.name         AS asset_name,\n            s.asset_class  AS \"asset_class: AssetClass\",\n            s.currency,\n            s.price_unit,\n            t.kind         AS \"kind: TradeKind\",\n            t.quantity,\n            t.price,\n            t.fee,\n            t.traded_at\n        FROM transactions t\n        JOIN accounts a ON a.id = t.account_id\n        JOIN assets   s ON s.id = t.asset_id\n        WHERE t.user_id = $1 AND t.traded_at <= $2\n        ORDER BY t.traded_at, t.created_at, t.id\n        ",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,17 @@
       },
       {
         "ordinal": 2,
+        "name": "account_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "accounts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
         "name": "account_type: AccountType",
         "type_info": {
           "Custom": {
@@ -51,7 +62,29 @@
         }
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
+        "name": "symbol",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "symbol"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "asset_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
         "name": "asset_class: AssetClass",
         "type_info": {
           "Custom": {
@@ -76,7 +109,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 7,
         "name": "currency",
         "type_info": "Bpchar",
         "origin": {
@@ -87,7 +120,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 8,
         "name": "price_unit",
         "type_info": "Numeric",
         "origin": {
@@ -98,7 +131,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 9,
         "name": "kind: TradeKind",
         "type_info": {
           "Custom": {
@@ -119,7 +152,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 10,
         "name": "quantity",
         "type_info": "Numeric",
         "origin": {
@@ -130,7 +163,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 11,
         "name": "price",
         "type_info": "Numeric",
         "origin": {
@@ -141,7 +174,7 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 12,
         "name": "fee",
         "type_info": "Numeric",
         "origin": {
@@ -152,7 +185,7 @@
         }
       },
       {
-        "ordinal": 10,
+        "ordinal": 13,
         "name": "traded_at",
         "type_info": "Date",
         "origin": {
@@ -180,8 +213,11 @@
       false,
       false,
       false,
+      false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "7ed7d134181dca04a4d512ff9de860ff7f3fc5da4b330ff4b363fc3ed0b4c057"
+  "hash": "420c9d9010483494be4dd08a87b1c56495afc1b61c41d3279ebb75ebbdfa2cc5"
 }

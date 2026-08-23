@@ -5,6 +5,7 @@ use rust_decimal::Decimal;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use crate::domain::account::AccountType;
 use crate::domain::asset::AssetClass;
 use crate::domain::currency::Currency;
 use crate::domain::position::{Holding, Trade, apply_trade};
@@ -28,12 +29,14 @@ impl Granularity {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupBy {
     None,
     AccountType,
     AssetClass,
+    Account,
+    Asset,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -48,6 +51,8 @@ pub struct HistoryPoint {
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct HistorySeries {
     pub key: String,
+    /// 画面表示用の名前。enum 軸では日本語名、口座・銘柄軸では登録名。
+    pub label: String,
     pub points: Vec<HistoryPoint>,
 }
 
@@ -65,6 +70,7 @@ struct PositionTimeline {
     asset_id: Uuid,
     asset_class: AssetClass,
     group_key: String,
+    group_label: String,
     price_unit: Decimal,
     currency: Currency,
     /// 約定日レートが1件でも引けなかった場合 true。評価から外す。
@@ -98,11 +104,47 @@ fn serde_key<T: serde::Serialize>(v: &T) -> String {
     }
 }
 
-fn group_key(t: &HistoryTrade, by: GroupBy) -> String {
+/// 分類軸に応じた (キー, 表示名) を返す。
+fn group_of(t: &HistoryTrade, by: GroupBy) -> (String, String) {
     match by {
-        GroupBy::None => "total".to_owned(),
-        GroupBy::AccountType => serde_key(&t.account_type),
-        GroupBy::AssetClass => serde_key(&t.asset_class),
+        GroupBy::None => ("total".to_owned(), "合計".to_owned()),
+        GroupBy::AccountType => {
+            let key = serde_key(&t.account_type);
+            let label = account_type_label(t.account_type).to_owned();
+            (key, label)
+        }
+        GroupBy::AssetClass => {
+            let key = serde_key(&t.asset_class);
+            let label = asset_class_label(t.asset_class).to_owned();
+            (key, label)
+        }
+        GroupBy::Account => (t.account_id.to_string(), t.account_name.clone()),
+        GroupBy::Asset => (
+            t.asset_id.to_string(),
+            format!("{} {}", t.symbol, t.asset_name),
+        ),
+    }
+}
+
+fn account_type_label(v: AccountType) -> &'static str {
+    match v {
+        AccountType::Tokutei => "特定口座",
+        AccountType::Ippan => "一般口座",
+        AccountType::NisaTsumitate => "NISA（つみたて投資枠）",
+        AccountType::NisaGrowth => "NISA（成長投資枠）",
+        AccountType::Ideco => "iDeCo",
+        AccountType::Bank => "銀行口座",
+    }
+}
+
+fn asset_class_label(v: AssetClass) -> &'static str {
+    match v {
+        AssetClass::Equity => "株式",
+        AssetClass::Etf => "ETF",
+        AssetClass::MutualFund => "投資信託",
+        AssetClass::Bond => "債券",
+        AssetClass::Cash => "現金",
+        AssetClass::Other => "その他",
     }
 }
 
@@ -181,12 +223,14 @@ pub async fn asset_history(
             fx_of.get(&currency).and_then(|p| rate_on(p, t.traded_at))
         };
 
+        let (gkey, glabel) = group_of(t, group_by);
         let tl = timelines
             .entry((t.account_id, t.asset_id))
             .or_insert_with(|| PositionTimeline {
                 asset_id: t.asset_id,
                 asset_class: t.asset_class,
-                group_key: group_key(t, group_by),
+                group_key: gkey,
+                group_label: glabel,
                 price_unit: t.price_unit,
                 currency,
                 unconvertible: false,
@@ -231,9 +275,14 @@ pub async fn asset_history(
         unpriced: HashSet<Uuid>,
     }
 
-    let mut keys: Vec<String> = timelines.values().map(|t| t.group_key.clone()).collect();
-    keys.sort();
-    keys.dedup();
+    // (キー, 表示名) の一覧。キーで一意化する
+    let mut keyed: Vec<(String, String)> = timelines
+        .values()
+        .map(|t| (t.group_key.clone(), t.group_label.clone()))
+        .collect();
+    keyed.sort();
+    keyed.dedup_by(|a, b| a.0 == b.0);
+    let keys: Vec<String> = keyed.iter().map(|(k, _)| k.clone()).collect();
 
     let mut acc: HashMap<(String, NaiveDate), Acc> = HashMap::new();
     for k in &keys {
@@ -291,9 +340,9 @@ pub async fn asset_history(
         }
     }
 
-    let series = keys
+    let series = keyed
         .into_iter()
-        .map(|key| {
+        .map(|(key, label)| {
             let points = dates
                 .iter()
                 .map(|d| {
@@ -306,10 +355,9 @@ pub async fn asset_history(
                     }
                 })
                 .collect();
-            HistorySeries { key, points }
+            HistorySeries { key, label, points }
         })
         .collect();
-
     Ok(HistoryResult {
         granularity,
         base_currency: jpy.to_string(),
