@@ -103,3 +103,25 @@ pub async fn delete(db: &PgPool, user_id: Uuid, id: Uuid) -> Result<bool, sqlx::
 
     Ok(result.rows_affected() == 1)
 }
+
+/// 口座名で1件引く。CSV取込で口座名からIDを解決するのに使う。
+pub async fn find_by_name(
+    db: &PgPool,
+    user_id: Uuid,
+    name: &str,
+) -> Result<Option<Account>, sqlx::Error> {
+    sqlx::query_as!(
+        Account,
+        r#"
+        SELECT id, user_id, name,
+               account_type AS "account_type: AccountType",
+               withholding, institution, currency, created_at, updated_at
+        FROM accounts
+        WHERE user_id = $1 AND name = $2
+        "#,
+        user_id,
+        name,
+    )
+    .fetch_optional(db)
+    .await
+}

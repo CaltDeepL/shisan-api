@@ -54,6 +54,11 @@ pub fn app(state: AppState) -> Router {
             "/transactions",
             get(handler::transactions::list).post(handler::transactions::create),
         )
+        .route("/import/transactions", post(handler::import::create))
+        .route(
+            "/import/transactions/dry-run",
+            post(handler::import::dry_run),
+        )
         .route(
             "/transactions/{id}",
             get(handler::transactions::show).delete(handler::transactions::delete),

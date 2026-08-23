@@ -123,6 +123,7 @@ pub async fn create(
             fee: payload.fee,
             traded_at: payload.traded_at,
             note: payload.note.map(|n| n.trim().to_owned()),
+            external_id: None,
         },
     )
     .await?;
@@ -132,7 +133,7 @@ pub async fn create(
         transaction_repo::fetch_trades(&mut tx, payload.account_id, payload.asset_id).await?;
     if let Err(err) = build_holding(&trades, price_unit) {
         tx.rollback().await?;
-        return Err(position_error(err));
+        return Err(err.into());
     }
 
     tx.commit().await?;

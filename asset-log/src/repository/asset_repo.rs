@@ -138,3 +138,27 @@ pub async fn update(
 
     Ok(asset)
 }
+/// symbol で1件引く。`assets_user_symbol_key` が upper(symbol) のため大文字小文字は無視する。
+pub async fn find_by_symbol(
+    pool: &PgPool,
+    user_id: Uuid,
+    symbol: &str,
+) -> Result<Option<Asset>, AppError> {
+    let asset = sqlx::query_as!(
+        Asset,
+        r#"
+        SELECT
+            id, user_id, symbol, name,
+            asset_class AS "asset_class: AssetClass",
+            currency, price_unit, created_at, updated_at
+        FROM assets
+        WHERE user_id = $1 AND upper(symbol) = upper($2)
+        "#,
+        user_id,
+        symbol,
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(asset)
+}
