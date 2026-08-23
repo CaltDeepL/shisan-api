@@ -438,3 +438,256 @@ async fn foreign_asset_uses_trade_date_rate(db: PgPool) {
     );
     assert_eq!(p[0]["unpriced_asset_count"], 0);
 }
+
+// ---------------------------------------------------------------------------
+// タスク#12: GET /analytics/allocation
+// ---------------------------------------------------------------------------
+
+async fn get_allocation(app: &Router, token: &str, query: &str) -> (StatusCode, Value) {
+    request(
+        app,
+        Method::GET,
+        &format!("/analytics/allocation{query}"),
+        Some(token),
+        None,
+    )
+    .await
+}
+
+/// `items` から `key` 一致の1件を取り出す
+fn item<'a>(body: &'a Value, key: &str) -> &'a Value {
+    body["items"]
+        .as_array()
+        .expect("items")
+        .iter()
+        .find(|i| i["key"] == key)
+        .unwrap_or_else(|| panic!("item {key} not found in {body}"))
+}
+
+/// `ratio` の総和。完了条件の検証に使う
+fn ratio_sum(body: &Value) -> Decimal {
+    body["items"]
+        .as_array()
+        .expect("items")
+        .iter()
+        .map(|i| dec(&i["ratio"]))
+        .sum()
+}
+
+/// 完了条件そのもの。3等分で端数が出ても、比率の合計はちょうど 100.00 になる。
+#[sqlx::test]
+async fn allocation_ratios_sum_to_100(db: PgPool) {
+    let app = test_app(db);
+    let u = register_user(&app, "alloc-sum@example.com").await;
+
+    let acc = create_account(&app, &u.token, "証券A", "tokutei", Some(true)).await;
+    // 評価額が 1,000,000 ずつ揃うよう数量と単価を組む（33.33% が3つ = 端数が出る）
+    let specs = [
+        ("AAA", "100", "10000"),
+        ("BBB", "200", "5000"),
+        ("CCC", "400", "2500"),
+    ];
+    let mut ids = Vec::new();
+    for (sym, qty, price) in specs {
+        let id = create_asset(&app, &u.token, sym, "equity", "JPY").await;
+        post_trade(&app, &u.token, acc, id, "buy", qty, price, "2026-01-05").await;
+        post_price(&app, &u.token, id, price, "2026-01-10").await;
+        ids.push(id);
+    }
+
+    let (status, body) = get_allocation(&app, &u.token, "?as_of=2026-01-10&group_by=asset").await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    assert_eq!(body["items"].as_array().expect("items").len(), 3);
+    assert_eq!(
+        ratio_sum(&body),
+        d("100.00"),
+        "比率の合計が100%でない: {body}"
+    );
+    assert_eq!(dec(&body["total_value_jpy"]), d("3000000"));
+    assert_eq!(body["scope"], "securities_only");
+
+    // 最大剰余法。先頭の1件だけが 0.01 を受け取る
+    let ratios: Vec<Decimal> = body["items"]
+        .as_array()
+        .expect("items")
+        .iter()
+        .map(|i| dec(&i["ratio"]))
+        .collect();
+    assert_eq!(ratios, vec![d("33.34"), d("33.33"), d("33.33")]);
+}
+
+/// 口座軸では key が UUID、label が登録した口座名になる。
+#[sqlx::test]
+async fn allocation_by_account_returns_names(db: PgPool) {
+    let app = test_app(db);
+    let u = register_user(&app, "alloc-acc@example.com").await;
+
+    let tokutei = create_account(&app, &u.token, "特定口座A", "tokutei", Some(true)).await;
+    let nisa = create_account(&app, &u.token, "NISA口座B", "nisa_growth", None).await;
+    let asset = create_asset(&app, &u.token, "DDD", "equity", "JPY").await;
+
+    post_trade(
+        &app,
+        &u.token,
+        tokutei,
+        asset,
+        "buy",
+        "300",
+        "1000",
+        "2026-01-05",
+    )
+    .await;
+    post_trade(
+        &app,
+        &u.token,
+        nisa,
+        asset,
+        "buy",
+        "100",
+        "1000",
+        "2026-01-05",
+    )
+    .await;
+    post_price(&app, &u.token, asset, "1000", "2026-01-10").await;
+
+    let (status, body) = get_allocation(&app, &u.token, "?as_of=2026-01-10&group_by=account").await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    assert_eq!(item(&body, &tokutei.to_string())["label"], "特定口座A");
+    assert_eq!(item(&body, &nisa.to_string())["label"], "NISA口座B");
+    assert_eq!(dec(&item(&body, &tokutei.to_string())["ratio"]), d("75.00"));
+    assert_eq!(dec(&item(&body, &nisa.to_string())["ratio"]), d("25.00"));
+    assert_eq!(ratio_sum(&body), d("100.00"));
+}
+
+/// allocation は asset-history と同じ経路を通る。両者の合計が一致することを保証する。
+/// これが崩れたら「折れ線の合計と円グラフの合計が合わない」バグが入っている。
+#[sqlx::test]
+async fn allocation_matches_history_total(db: PgPool) {
+    let app = test_app(db);
+    let u = register_user(&app, "alloc-match@example.com").await;
+
+    let acc = create_account(&app, &u.token, "証券A", "tokutei", Some(true)).await;
+    let equity = create_asset(&app, &u.token, "EEE", "equity", "JPY").await;
+    let fund = create_asset(&app, &u.token, "FFF", "mutual_fund", "JPY").await;
+
+    post_trade(
+        &app,
+        &u.token,
+        acc,
+        equity,
+        "buy",
+        "37",
+        "1234",
+        "2026-01-05",
+    )
+    .await;
+    post_trade(
+        &app,
+        &u.token,
+        acc,
+        fund,
+        "buy",
+        "12345",
+        "13579",
+        "2026-01-05",
+    )
+    .await;
+    post_price(&app, &u.token, equity, "1301", "2026-01-10").await;
+    post_price(&app, &u.token, fund, "14022", "2026-01-10").await;
+
+    let (_, alloc) = get_allocation(&app, &u.token, "?as_of=2026-01-10&group_by=asset_class").await;
+    // allocation では none を弾いているが、時系列側で合計を見るのは正当な用途
+    let (_, hist) = get_history(
+        &app,
+        &u.token,
+        "?from=2026-01-10&to=2026-01-10&group_by=none",
+    )
+    .await;
+
+    let hist_total = dec(&points(&hist, "total")[0]["market_value_jpy"]);
+    assert_eq!(
+        dec(&alloc["total_value_jpy"]),
+        hist_total,
+        "allocation と asset-history の合計が一致しない"
+    );
+    assert_eq!(ratio_sum(&alloc), d("100.00"));
+}
+
+/// 価格未登録の銘柄は分母から外れ、件数だけが返る。
+#[sqlx::test]
+async fn allocation_excludes_unpriced(db: PgPool) {
+    let app = test_app(db);
+    let u = register_user(&app, "alloc-unpriced@example.com").await;
+
+    let acc = create_account(&app, &u.token, "証券A", "tokutei", Some(true)).await;
+    let priced = create_asset(&app, &u.token, "GGG", "equity", "JPY").await;
+    let unpriced = create_asset(&app, &u.token, "HHH", "equity", "JPY").await;
+
+    post_trade(
+        &app,
+        &u.token,
+        acc,
+        priced,
+        "buy",
+        "100",
+        "2000",
+        "2026-01-05",
+    )
+    .await;
+    post_trade(
+        &app,
+        &u.token,
+        acc,
+        unpriced,
+        "buy",
+        "50",
+        "3000",
+        "2026-01-05",
+    )
+    .await;
+    post_price(&app, &u.token, priced, "2000", "2026-01-10").await;
+
+    let (status, body) = get_allocation(&app, &u.token, "?as_of=2026-01-10&group_by=asset").await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    // 価格のある1件だけが構成比を持ち、それが100%になる
+    assert_eq!(body["items"].as_array().expect("items").len(), 1);
+    assert_eq!(item(&body, &priced.to_string())["key"], priced.to_string());
+    assert_eq!(dec(&body["total_value_jpy"]), d("200000"));
+    assert_eq!(body["unpriced_asset_count"], 1);
+    assert_eq!(ratio_sum(&body), d("100.00"));
+}
+
+/// 保有ゼロでも 500 にならず、空の構成比を返す。
+#[sqlx::test]
+async fn allocation_empty_portfolio(db: PgPool) {
+    let app = test_app(db);
+    let u = register_user(&app, "alloc-empty@example.com").await;
+    create_account(&app, &u.token, "証券A", "tokutei", Some(true)).await;
+
+    let (status, body) = get_allocation(&app, &u.token, "?as_of=2026-01-10").await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert!(body["items"].as_array().expect("items").is_empty());
+    assert_eq!(dec(&body["total_value_jpy"]), d("0"));
+    assert_eq!(body["unpriced_asset_count"], 0);
+    // 既定の分類軸
+    assert_eq!(body["group_by"], "asset_class");
+}
+
+/// none 指定・未来日は 422、無認証は 401。
+#[sqlx::test]
+async fn allocation_rejects_none_and_future(db: PgPool) {
+    let app = test_app(db);
+    let u = register_user(&app, "alloc-invalid@example.com").await;
+
+    let (status, body) = get_allocation(&app, &u.token, "?group_by=none").await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{body}");
+
+    let (status, body) = get_allocation(&app, &u.token, "?as_of=2999-12-31").await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{body}");
+
+    let (status, _) = request(&app, Method::GET, "/analytics/allocation", None, None).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+}

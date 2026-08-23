@@ -8,7 +8,10 @@ use serde::Deserialize;
 use crate::{
     error::{AppError, AppResult},
     middleware::auth::AuthUser,
-    service::analytics_service::{self, Granularity, GroupBy, HistoryResult},
+    service::{
+        allocation_service::{self, AllocationResult},
+        analytics_service::{self, Granularity, GroupBy, HistoryResult},
+    },
     state::AppState,
 };
 
@@ -67,6 +70,42 @@ pub async fn asset_history(
         q.group_by,
     )
     .await?;
+
+    Ok(Json(result))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AllocationQuery {
+    pub as_of: Option<NaiveDate>,
+    #[serde(default = "default_allocation_group_by")]
+    pub group_by: GroupBy,
+}
+
+fn default_allocation_group_by() -> GroupBy {
+    GroupBy::AssetClass
+}
+
+pub async fn allocation(
+    State(st): State<AppState>,
+    AuthUser(user_id): AuthUser,
+    Query(q): Query<AllocationQuery>,
+) -> AppResult<Json<AllocationResult>> {
+    let jst = chrono::FixedOffset::east_opt(9 * 3600).expect("valid offset");
+    let today = chrono::Utc::now().with_timezone(&jst).date_naive();
+
+    let as_of = q.as_of.unwrap_or(today);
+    if as_of > today {
+        return Err(AppError::field("as_of", "未来の日付は指定できません"));
+    }
+    if q.group_by == GroupBy::None {
+        return Err(AppError::field(
+            "group_by",
+            "allocation では none を指定できません",
+        ));
+    }
+
+    let result =
+        allocation_service::allocation(&st.db, st.fx.as_ref(), user_id, as_of, q.group_by).await?;
 
     Ok(Json(result))
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO fx_rates (base, quote, rated_on, rate) VALUES ($1, $2, $3::date, $4)",
+  "query": "INSERT INTO fx_rates (base, quote, rated_on, rate) VALUES ($1, $2, $3, $4)",
   "describe": {
     "columns": [],
     "parameters": {
@@ -13,5 +13,5 @@
     },
     "nullable": []
   },
-  "hash": "2d432fd441d3f2604ca49b1b8569a0244c7fe57418e623c45c1ca254f2029ecb"
+  "hash": "98df98fc593010a20bd0e5427669d2baa42c24977562e2c6d5ff69d1a527a6e6"
 }
