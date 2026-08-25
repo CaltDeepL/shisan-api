@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::domain::position::TradeKind;
 use crate::error::AppError;
 use crate::repository::transaction_repo::NewTransaction;
-use crate::repository::{account_repo, asset_repo, transaction_repo};
+use crate::repository::{account_repo, asset_repo, snapshot_repo, transaction_repo};
 
 #[derive(Debug, serde::Deserialize)]
 struct ImportRow {
@@ -301,6 +301,10 @@ pub async fn import(
             tx.rollback().await?;
             return Err(err.into());
         }
+    }
+
+    if let Some(earliest) = outcome.rows.iter().map(|row| row.traded_at).min() {
+        snapshot_repo::invalidate_from(&mut tx, user_id, earliest).await?;
     }
 
     tx.commit().await?;

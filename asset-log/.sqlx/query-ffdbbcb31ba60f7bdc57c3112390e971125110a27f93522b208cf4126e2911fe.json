@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT d::date AS \"on_date!\"\n        FROM generate_series($1::date, $2::date, interval '1 day') AS d\n        WHERE $3::text = 'day'\n           OR d::date = $1::date\n           OR d::date = $2::date\n           OR d::date = (date_trunc('month', d) + interval '1 month - 1 day')::date\n        ORDER BY d\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "on_date!",
+        "type_info": "Date",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date",
+        "Date",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ffdbbcb31ba60f7bdc57c3112390e971125110a27f93522b208cf4126e2911fe"
+}

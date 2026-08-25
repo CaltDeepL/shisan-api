@@ -1,5 +1,5 @@
 use asset_log::{
-    auth::jwt::JwtKeys,
+    auth::{job::JobToken, jwt::JwtKeys},
     provider::{
         cached_fx::{CachedFxProvider, StalePolicy},
         fx::FrankfurterClient,
@@ -34,7 +34,12 @@ pub fn test_app_with_fx(db: PgPool, fx_base_url: &str, policy: StalePolicy) -> R
         .expect("failed to build FX client");
     let fx = Arc::new(CachedFxProvider::new(client, db.clone(), policy));
 
-    asset_log::app(AppState { db, jwt, fx })
+    asset_log::app(AppState {
+        db,
+        jwt,
+        fx,
+        job_token: JobToken::disabled(),
+    })
 }
 
 pub struct TestUser {
@@ -104,4 +109,28 @@ pub async fn request(
     };
 
     (status, json)
+}
+/// バッチ用トークン。snapshots_test が Authorization ヘッダに使う。
+#[allow(dead_code)]
+pub const JOB_TOKEN: &str = "test-job-token-0123456789abcdefghij";
+
+/// バッチ実行を有効にしたルータ。
+#[allow(dead_code)]
+pub fn test_app_with_job_token(db: PgPool) -> Router {
+    let jwt = JwtKeys::new("test-secret-for-integration-tests", 60);
+    let client =
+        FrankfurterClient::new("http://127.0.0.1:1/unreachable", Duration::from_millis(500))
+            .expect("failed to build FX client");
+    let fx = Arc::new(CachedFxProvider::new(
+        client,
+        db.clone(),
+        StalePolicy::default(),
+    ));
+
+    asset_log::app(AppState {
+        db,
+        jwt,
+        fx,
+        job_token: JobToken::new(JOB_TOKEN),
+    })
 }

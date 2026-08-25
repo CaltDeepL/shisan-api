@@ -1,3 +1,4 @@
+use crate::auth::job::JobToken;
 use crate::auth::jwt::JwtKeys;
 use crate::provider::fx::FxRateProvider;
 use axum::extract::FromRef;
@@ -9,6 +10,7 @@ pub struct AppState {
     pub db: PgPool,
     pub jwt: JwtKeys,
     pub fx: Arc<dyn FxRateProvider>,
+    pub job_token: JobToken,
 }
 
 impl FromRef<AppState> for JwtKeys {
@@ -20,5 +22,11 @@ impl FromRef<AppState> for JwtKeys {
 impl FromRef<AppState> for PgPool {
     fn from_ref(s: &AppState) -> Self {
         s.db.clone()
+    }
+}
+
+impl FromRef<AppState> for JobToken {
+    fn from_ref(s: &AppState) -> Self {
+        s.job_token.clone()
     }
 }

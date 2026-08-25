@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM daily_snapshots WHERE user_id = $1 AND snapshot_on = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cb3e7c058491071e84f393d544ec44454ac2d8ab403a6a51cea58f277ff7132c"
+}

@@ -1,0 +1,5 @@
+[env]
+# DATABASE_URL があると sqlx はキャッシュより実接続を優先するため、
+# 既定でオフライン（.sqlx のクエリキャッシュ）を使う。
+# 新しいクエリを書いたら SQLX_OFFLINE=false cargo sqlx prepare -- --all-targets
+SQLX_OFFLINE = "true"

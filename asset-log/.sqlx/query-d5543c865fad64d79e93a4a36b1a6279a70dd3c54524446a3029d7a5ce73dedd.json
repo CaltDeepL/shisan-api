@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO daily_snapshots (\n                user_id, snapshot_on, account_id, asset_id,\n                quantity, avg_cost, cost_basis_jpy, market_value_jpy, price, unpriced\n            )\n            SELECT $1::uuid, $2::date, t.account_id, t.asset_id,\n                   t.quantity, t.avg_cost, t.cost_basis_jpy,\n                   t.market_value_jpy, t.price, t.unpriced\n            FROM unnest(\n                $3::uuid[], $4::uuid[], $5::numeric[], $6::numeric[],\n                $7::numeric[], $8::numeric[], $9::numeric[], $10::bool[]\n            ) AS t(\n                account_id, asset_id, quantity, avg_cost,\n                cost_basis_jpy, market_value_jpy, price, unpriced\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date",
+        "UuidArray",
+        "UuidArray",
+        "NumericArray",
+        "NumericArray",
+        "NumericArray",
+        "NumericArray",
+        "NumericArray",
+        "BoolArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d5543c865fad64d79e93a4a36b1a6279a70dd3c54524446a3029d7a5ce73dedd"
+}

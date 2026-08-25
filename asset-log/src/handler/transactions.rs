@@ -18,7 +18,10 @@ use crate::{
     domain::position::{PositionError, TradeKind, build_holding},
     error::AppError,
     middleware::auth::AuthUser,
-    repository::transaction_repo::{self, NewTransaction, Transaction, TransactionFilter},
+    repository::{
+        snapshot_repo,
+        transaction_repo::{self, NewTransaction, Transaction, TransactionFilter},
+    },
     state::AppState,
 };
 
@@ -136,6 +139,7 @@ pub async fn create(
         return Err(err.into());
     }
 
+    snapshot_repo::invalidate_from(&mut tx, user.0, payload.traded_at).await?;
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(created.into())))
 }
@@ -219,6 +223,7 @@ pub async fn delete(
         });
     }
 
+    snapshot_repo::invalidate_from(&mut tx, user.0, target.traded_at).await?;
     tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }

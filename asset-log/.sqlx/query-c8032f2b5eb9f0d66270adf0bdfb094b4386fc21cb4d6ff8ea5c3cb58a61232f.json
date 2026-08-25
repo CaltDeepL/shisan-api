@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO snapshot_days (user_id, snapshot_on, position_count, unpriced_count)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (user_id, snapshot_on)\n        DO UPDATE SET position_count = EXCLUDED.position_count,\n                      unpriced_count = EXCLUDED.unpriced_count,\n                      computed_at    = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c8032f2b5eb9f0d66270adf0bdfb094b4386fc21cb4d6ff8ea5c3cb58a61232f"
+}
