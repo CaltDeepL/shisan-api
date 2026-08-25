@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT count(*) AS \"count!\"\n        FROM snapshot_days\n        WHERE user_id = $1 AND snapshot_on = ANY($2::date[])\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "DateArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a36f3465afb6fd92dc8fda8a88ad9ee8f0f059a4c14cb37456c8f7510a10f15f"
+}

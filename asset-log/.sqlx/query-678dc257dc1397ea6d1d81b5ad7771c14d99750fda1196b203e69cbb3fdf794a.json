@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n                SELECT 1 FROM transactions WHERE user_id = $1 AND external_id = $2\n            ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "678dc257dc1397ea6d1d81b5ad7771c14d99750fda1196b203e69cbb3fdf794a"
+}

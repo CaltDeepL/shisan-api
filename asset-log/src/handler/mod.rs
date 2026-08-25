@@ -7,4 +7,5 @@ pub mod health;
 pub mod holdings;
 pub mod import;
 pub mod prices;
+pub mod snapshots;
 pub mod transactions;

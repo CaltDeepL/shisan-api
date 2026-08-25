@@ -8,6 +8,8 @@ pub struct Config {
     pub fx_timeout_ms: u64,        // 既定 3000
     pub fx_max_calendar_days: i64, // 既定 4
     pub fx_max_business_days: i64, // 既定 2
+    /// バッチ用トークン。未設定なら /snapshots/run を 503 で拒否する
+    pub snapshot_job_token: Option<String>,
 }
 
 impl Config {
@@ -40,6 +42,15 @@ impl Config {
             jwt_ttl_minutes: std::env::var("JWT_TTL_MINUTES")
                 .unwrap_or_else(|_| "60".into())
                 .parse()?,
+            snapshot_job_token: match std::env::var("SNAPSHOT_JOB_TOKEN") {
+                Ok(v) if v.trim().is_empty() => None,
+                Ok(v) if v.len() < 32 => anyhow::bail!(
+                    "SNAPSHOT_JOB_TOKEN は32バイト以上にしてください（現在 {}）",
+                    v.len()
+                ),
+                Ok(v) => Some(v),
+                Err(_) => None,
+            },
         })
     }
 }

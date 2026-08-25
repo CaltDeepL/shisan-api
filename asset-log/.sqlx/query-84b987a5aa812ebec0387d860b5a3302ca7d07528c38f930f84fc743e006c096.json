@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO fx_rates (base, quote, rated_on, rate) VALUES ('USD', 'JPY', $1, 150)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Date"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "84b987a5aa812ebec0387d860b5a3302ca7d07528c38f930f84fc743e006c096"
+}

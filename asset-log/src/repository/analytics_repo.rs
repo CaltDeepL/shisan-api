@@ -71,6 +71,32 @@ pub async fn fetch_trades_until(
     .await
 }
 
+/// granularity に応じた対象日を返す（day: 全日, month: 期間端 + 月末）。
+/// fetch_price_grid の spine と同じ規則で日付を選ぶ。
+pub async fn fetch_target_dates(
+    db: &PgPool,
+    from: NaiveDate,
+    to: NaiveDate,
+    granularity: &str, // "day" | "month"
+) -> Result<Vec<NaiveDate>, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"
+        SELECT d::date AS "on_date!"
+        FROM generate_series($1::date, $2::date, interval '1 day') AS d
+        WHERE $3::text = 'day'
+           OR d::date = $1::date
+           OR d::date = $2::date
+           OR d::date = (date_trunc('month', d) + interval '1 month - 1 day')::date
+        ORDER BY d
+        "#,
+        from,
+        to,
+        granularity,
+    )
+    .fetch_all(db)
+    .await
+}
+
 pub async fn fetch_price_grid(
     db: &PgPool,
     user_id: Uuid,

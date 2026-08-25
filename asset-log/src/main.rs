@@ -1,4 +1,4 @@
-use asset_log::auth::jwt::JwtKeys;
+use asset_log::auth::{job::JobToken, jwt::JwtKeys};
 use asset_log::provider::{
     cached_fx::{CachedFxProvider, StalePolicy},
     fx::FrankfurterClient,
@@ -102,7 +102,12 @@ async fn run_server() {
         },
     ));
 
-    let state = AppState { db: pool, jwt, fx };
+    let state = AppState {
+        db: pool,
+        jwt,
+        fx,
+        job_token: JobToken::from_config(&config),
+    };
 
     let app = asset_log::app(state);
 

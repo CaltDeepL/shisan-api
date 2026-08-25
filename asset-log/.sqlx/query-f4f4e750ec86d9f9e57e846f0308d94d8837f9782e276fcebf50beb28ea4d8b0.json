@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n            SELECT 1 FROM transactions\n            WHERE user_id = $1 AND account_id = $2 AND asset_id = $3\n              AND kind = $4::trade_kind AND quantity = $5 AND price = $6 AND traded_at = $7\n        ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "trade_kind",
+            "kind": {
+              "Enum": [
+                "buy",
+                "sell"
+              ]
+            }
+          }
+        },
+        "Numeric",
+        "Numeric",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f4f4e750ec86d9f9e57e846f0308d94d8837f9782e276fcebf50beb28ea4d8b0"
+}

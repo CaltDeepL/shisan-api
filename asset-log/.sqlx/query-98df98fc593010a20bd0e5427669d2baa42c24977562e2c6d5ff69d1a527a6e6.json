@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO fx_rates (base, quote, rated_on, rate) VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Bpchar",
+        "Date",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "98df98fc593010a20bd0e5427669d2baa42c24977562e2c6d5ff69d1a527a6e6"
+}

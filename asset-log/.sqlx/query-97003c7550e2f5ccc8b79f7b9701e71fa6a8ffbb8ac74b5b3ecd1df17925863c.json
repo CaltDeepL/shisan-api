@@ -1,0 +1,177 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            s.snapshot_on,\n            s.account_id,\n            s.asset_id,\n            a.name           AS account_name,\n            a.account_type   AS \"account_type: AccountType\",\n            ast.symbol,\n            ast.name         AS asset_name,\n            ast.asset_class  AS \"asset_class: AssetClass\",\n            s.quantity,\n            s.cost_basis_jpy,\n            s.market_value_jpy\n        FROM daily_snapshots s\n        JOIN accounts a   ON a.id   = s.account_id\n        JOIN assets   ast ON ast.id = s.asset_id\n        WHERE s.user_id = $1 AND s.snapshot_on = ANY($2::date[])\n        ORDER BY s.snapshot_on, s.account_id, s.asset_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "snapshot_on",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "daily_snapshots",
+            "name": "snapshot_on"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "daily_snapshots",
+            "name": "account_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "asset_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "daily_snapshots",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "account_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "accounts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "account_type: AccountType",
+        "type_info": {
+          "Custom": {
+            "name": "account_type",
+            "kind": {
+              "Enum": [
+                "tokutei",
+                "ippan",
+                "nisa_tsumitate",
+                "nisa_growth",
+                "ideco",
+                "bank"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "accounts",
+            "name": "account_type"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "symbol",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "symbol"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "asset_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "asset_class: AssetClass",
+        "type_info": {
+          "Custom": {
+            "name": "asset_class",
+            "kind": {
+              "Enum": [
+                "equity",
+                "etf",
+                "mutual_fund",
+                "bond",
+                "cash",
+                "other"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "assets",
+            "name": "asset_class"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "quantity",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "daily_snapshots",
+            "name": "quantity"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "cost_basis_jpy",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "daily_snapshots",
+            "name": "cost_basis_jpy"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "market_value_jpy",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "daily_snapshots",
+            "name": "market_value_jpy"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "DateArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "97003c7550e2f5ccc8b79f7b9701e71fa6a8ffbb8ac74b5b3ecd1df17925863c"
+}
