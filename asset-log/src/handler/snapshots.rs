@@ -1,24 +1,36 @@
+use crate::error::AppError;
+use crate::middleware::auth::JobAuth;
+use crate::openapi::ProblemDetailsSchema as ProblemDetails;
+use crate::service::snapshot_service::{self, RunReport};
+use crate::state::AppState;
 use axum::Json;
 use axum::extract::State;
 use chrono::NaiveDate;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::error::AppError;
-use crate::middleware::auth::JobAuth;
-use crate::service::snapshot_service::{self, RunReport};
-use crate::state::AppState;
-
-#[derive(Debug, Default, serde::Deserialize)]
+#[derive(Debug, Default, serde::Deserialize, ToSchema)]
 pub struct RunRequest {
+    /// 開始日。既定は to の6日前
     #[serde(default)]
     pub from: Option<NaiveDate>,
+    /// 終了日。既定は当日
     #[serde(default)]
     pub to: Option<NaiveDate>,
     /// 指定するとそのユーザーだけを対象にする。分割実行・再計算用
     #[serde(default)]
     pub user_id: Option<Uuid>,
 }
-
+#[utoipa::path(
+    post, path = "/snapshots/run", tag = "snapshots",
+    security(("jobToken" = [])),
+    request_body(content = RunRequest, description = "省略可。ボディなしなら直近7日分を全ユーザーで実行"),
+    responses(
+        (status = 200, description = "バッチ実行の結果", body = RunReport),
+        (status = 400, description = "from が to より後", body = ProblemDetails),
+        (status = 401, description = "バッチトークンが不正", body = ProblemDetails)
+    )
+)]
 /// バッチ実行。認証は JobAuth（ユーザーJWTではない）。
 pub async fn run(
     _: JobAuth,

@@ -28,6 +28,9 @@ clap = { version = "4.5", features = ["derive"] }
 axum-extra = { version = "0.10", features = ["typed-header"] }
 rand = "0.8"
 dotenvy = "0.15.7"
+utoipa = { version = "5.5.0", features = ["axum_extras", "chrono", "uuid", "decimal"] }
+utoipa-axum = "0.2.0"
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum", "vendored"] }
 
 [dev-dependencies]
 wiremock = "0.6"

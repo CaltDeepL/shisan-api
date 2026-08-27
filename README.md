@@ -4,8 +4,7 @@ NISA・iDeCo を含む複数口座の資産を横断的に管理し、損益と�
 
 証券会社ごとにアプリを開いて残高を確認する手間をなくし、「制度をまたいだ資産全体で、実際にいくら増えたのか」を一箇所で把握することを目的としています。
 
-> **開発中のポートフォリオプロジェクトです。** 全16タスクのロードマップに沿って実装を進めており、現在は基盤構築フェーズです。進捗は[実装状況](#実装状況)を参照してください。
-
+> **開発中のポートフォリオプロジェクトです。** 全16タスクのロードマップに沿って実装を進めており、API 本体の実装は完了しています。残りは CI とデプロイです。進捗は[実装状況](#実装状況)を参照してください。
 ---
 
 ## なぜ作ったか
@@ -15,6 +14,7 @@ NISA・iDeCo を含む複数口座の資産を横断的に管理し、損益と�
 - **NISA の非課税枠が制度どおりに管理されない** — 2024年以降の新NISAは「つみたて投資枠」と「成長投資枠」で年間上限が異なるため、枠を区別せずに集計すると意味をなさない
 - **収益率が単純な損益率でしか出ない** — 積立のように入金タイミングがばらつく場合、単純な損益率では実質的なパフォーマンスがわからない。金額加重収益率（XIRR）が必要
 - **税引後のリターンが見えない** — 特定口座と非課税口座が混在していると、額面の損益と手元に残る額が乖離する
+- **収益率が単純な損益率でしか出ない** — 積立のように入金タイミングがばらつく場合、単純な損益率では実質的なパフォーマンスがわからない。金額加重収益率（XIRR）が必要（16タスク完了後に実装予定）
 
 これらを扱うには、口座種別と取引履歴を制度に即した形でモデリングする必要があります。その設計自体がこのプロジェクトの主題です。
 
@@ -59,8 +59,10 @@ shisan-api/
 └── asset-log/                # バックエンド（Rust）
     ├── Dockerfile
     ├── migrations/           # sqlx マイグレーション
-    ├── docs/                 # タスクごとの設計メモ
+    ├── docs/                 # タスクごとの設計メモ / openapi.json
     └── src/
+        ├── error.rs          # AppError → IntoResponse（RFC 9457）
+        ├── openapi.rs        # OpenAPI 定義（ApiDoc / セキュリティスキーム）
         ├── main.rs           # clap CLI + axum 起動
         ├── config.rs         # 環境変数
         ├── state.rs          # AppState / PgPool
@@ -119,6 +121,17 @@ docker compose up --build -d
 curl http://localhost:8080/health
 ```
 
+### API ドキュメント
+
+起動後、Swagger UI から全エンドポイントの仕様を確認し、その場でリクエストを試せます。
+
+http://localhost:8080/docs
+
+
+OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/docs/openapi.json`](asset-log/docs/openapi.json) にもコミットしています。
+
+認証が必要なエンドポイントは、`POST /auth/register` で取得したトークンを Swagger UI 右上の **Authorize** に入力してから試せます。
+
 ### マイグレーション
 
 sqlx CLI はホスト側で実行するため、接続先を明示します。
@@ -144,6 +157,19 @@ sqlx migrate info --database-url "$SQLX_DB_URL"
 ---
 
 ## 実装上の工夫
+
+### OpenAPI 仕様の自動生成
+`utoipa-axum` の `OpenApiRouter` を使い、ルート登録とドキュメント生成を同じ場所にまとめています。
+
+```rust
+OpenApiRouter::with_openapi(ApiDoc::openapi())
+    .routes(routes!(handler::accounts::create, handler::accounts::list))
+    .split_for_parts()
+```
+
+`routes!()` に渡したハンドラがそのまま axum のルートになり、同時に `#[utoipa::path]` の情報から仕様が組み立てられます。ルートを追加したのにドキュメントを書き忘れる、パスを変更したのに仕様が古いまま、といった乖離が構造的に起きません。
+
+統合テストでもパス数の完全一致を検証しており、エンドポイントを追加すると仕様の更新を促してテストが落ちるようにしています。
 
 ### distroless でのヘルスチェック
 
@@ -185,14 +211,14 @@ HEALTHCHECK CMD ["./asset-log", "healthcheck"]
 | 8 | 取引 CRUD | 完了 |
 | 9 | `/holdings` エンドポイント | 完了 |
 | 10 | FxRateProvider（Frankfurter） | 完了 |
-| 11 | analytics（XIRR） | 完了 |
-| 12 | CSV インポート | 完了 |
-| 13 | 日次スナップショット | 完了 |
-| 14 | OpenAPI（utoipa） | 完了 |
-| 15 | GitHub Actions | 未着手 |
-| 16 | デプロイ | 未着手 |
+| 11 | analytics（資産推移・アセットアロケーション） | 完了 |
+| 12 | 資産配分（GET /analytics/allocation | 完了 |
+| 13 | CSVインポート（取引履歴の一括取込） | 完了 |
+| 14 | 日次スナップショット（バッチ） | 完了 |
+| 15 | OpenAPI | 完了 |
+| 16 | デプロイ・GitHub Actions | 未着手 |
 
-Google ログイン（OIDC）は自前認証の実装後に上乗せする予定です。
+XIRR（金額加重収益率）と Google ログイン（OIDC）は、16タスク完了後の追加機能として [`asset-tracker-design.md`](asset-log/docs/asset-tracker-design.md) に追補しています。
 
 ---
 

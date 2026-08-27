@@ -7,6 +7,9 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::openapi::ProblemDetailsSchema as ProblemDetails;
+use utoipa::{IntoParams, ToSchema};
+
 use crate::domain::asset::AssetPrice;
 use crate::error::AppError;
 use crate::middleware::auth::AuthUser;
@@ -18,39 +21,46 @@ use crate::state::AppState;
 
 const MAX_PRICES_PER_REQUEST: usize = 1000;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct UpsertPricesRequest {
-    asset_id: Uuid,
+    pub asset_id: Uuid,
+    /// 価格の出所。未指定なら "manual"
     #[serde(default)]
-    source: Option<String>,
-    prices: Vec<PriceItem>,
+    pub source: Option<String>,
+    /// 1リクエストあたり最大1000件
+    pub prices: Vec<PriceItem>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct PriceItem {
-    priced_on: NaiveDate,
+    pub priced_on: NaiveDate,
     #[serde(with = "rust_decimal::serde::str")]
-    price: Decimal,
+    #[schema(value_type = String, example = "2350.5")]
+    pub price: Decimal,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct UpsertPricesResponse {
-    upserted: u64,
+    /// 登録・更新された件数
+    pub upserted: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams)]
 pub struct PriceHistoryQuery {
-    from: Option<NaiveDate>,
-    to: Option<NaiveDate>,
+    /// 開始日（含む）
+    pub from: Option<NaiveDate>,
+    /// 終了日（含む）
+    pub to: Option<NaiveDate>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct PriceResponse {
-    priced_on: NaiveDate,
+    pub priced_on: NaiveDate,
     #[serde(with = "rust_decimal::serde::str")]
-    price: Decimal,
-    source: String,
-    updated_at: DateTime<Utc>,
+    #[schema(value_type = String)]
+    pub price: Decimal,
+    pub source: String,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl From<AssetPrice> for PriceResponse {
@@ -64,7 +74,18 @@ impl From<AssetPrice> for PriceResponse {
         }
     }
 }
-
+#[utoipa::path(
+    post, path = "/prices", tag = "assets",
+    security(("bearerAuth" = [])),
+    request_body = UpsertPricesRequest,
+    responses(
+        (status = 200, description = "登録・更新した件数", body = UpsertPricesResponse),
+        (status = 400, description = "prices が空", body = ProblemDetails),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 404, description = "銘柄が存在しない", body = ProblemDetails),
+        (status = 422, description = "件数超過、未来日、価格が負", body = ProblemDetails)
+    )
+)]
 pub async fn upsert_prices(
     State(state): State<AppState>,
     user: AuthUser,
@@ -107,7 +128,19 @@ pub async fn upsert_prices(
 
     Ok(Json(UpsertPricesResponse { upserted }))
 }
-
+#[utoipa::path(
+    get, path = "/prices/{asset_id}", tag = "assets",
+    security(("bearerAuth" = [])),
+    params(
+        ("asset_id" = Uuid, Path, description = "銘柄ID"),
+        PriceHistoryQuery
+    ),
+    responses(
+        (status = 200, description = "価格履歴（日付の昇順）", body = Vec<PriceResponse>),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 404, description = "銘柄が存在しない", body = ProblemDetails)
+    )
+)]
 pub async fn get_price_history(
     State(state): State<AppState>,
     user: AuthUser,

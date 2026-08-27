@@ -20,7 +20,7 @@ services:
     build:
       context: ./asset-log
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgres://assetlog:local_secure_password_123@db:5432/assetlog
       PORT: ${PORT}
       RUST_LOG: ${RUST_LOG}
       JWT_SECRET: ${JWT_SECRET}

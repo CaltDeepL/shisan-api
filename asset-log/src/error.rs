@@ -5,6 +5,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
+use utoipa::ToSchema;
 use uuid::Uuid;
 /// Postgres SQLSTATE（https://www.postgresql.org/docs/current/errcodes-appendix.html）
 mod sqlstate {
@@ -54,9 +55,13 @@ pub enum AppError {
     Internal(#[from] anyhow::Error),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct FieldError {
+    /// エラーが発生した入力項目名
+    #[schema(example = "quantity")]
     pub field: String,
+    /// 項目ごとのエラー内容
+    #[schema(example = "数量は正の数である必要があります")]
     pub message: String,
 }
 

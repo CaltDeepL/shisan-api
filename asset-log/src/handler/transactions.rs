@@ -3,7 +3,7 @@
 //! 登録・削除はどちらも「先に書き換えてから、変更後の全取引を畳み込み直す」方式。
 //! 過去日付への差し込みや、買いの削除で後続の売却が成立しなくなるケースも
 //! 同じ経路で検出できる。整合しなければトランザクションごと捨てる。
-
+use crate::openapi::ProblemDetailsSchema as ProblemDetails;
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -12,6 +12,7 @@ use axum::{
 use chrono::{DateTime, FixedOffset, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::{
@@ -34,37 +35,52 @@ fn today_jst() -> NaiveDate {
     Utc::now().with_timezone(&jst).date_naive()
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateTransaction {
     pub account_id: Uuid,
     pub asset_id: Uuid,
     pub kind: TradeKind,
+    /// 数量。正の数
+    #[schema(value_type = String, example = "100")]
     pub quantity: Decimal,
+    /// 単価。0以上
+    #[schema(value_type = String, example = "2350.5")]
     pub price: Decimal,
+    /// 手数料。0以上。未指定なら0
     #[serde(default)]
+    #[schema(value_type = String, example = "550")]
     pub fee: Decimal,
+    /// 約定日。未来日は不可（日本時間で判定）
     pub traded_at: NaiveDate,
     #[serde(default)]
     pub note: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams)]
 pub struct ListQuery {
+    /// 口座で絞り込む
     pub account_id: Option<Uuid>,
+    /// 銘柄で絞り込む
     pub asset_id: Option<Uuid>,
+    /// 約定日の開始（含む）
     pub from: Option<NaiveDate>,
+    /// 約定日の終了（含む）
     pub to: Option<NaiveDate>,
+    /// 取得件数。既定100、最大500に丸められる
     pub limit: Option<i64>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct TransactionResponse {
     pub id: Uuid,
     pub account_id: Uuid,
     pub asset_id: Uuid,
     pub kind: TradeKind,
+    #[schema(value_type = String, example = "100")]
     pub quantity: Decimal,
+    #[schema(value_type = String, example = "2350.5")]
     pub price: Decimal,
+    #[schema(value_type = String, example = "550")]
     pub fee: Decimal,
     pub traded_at: NaiveDate,
     pub note: Option<String>,
@@ -87,7 +103,17 @@ impl From<Transaction> for TransactionResponse {
         }
     }
 }
-
+#[utoipa::path(
+    post, path = "/transactions", tag = "transactions",
+    security(("bearerAuth" = [])),
+    request_body = CreateTransaction,
+    responses(
+        (status = 201, description = "取引を登録した", body = TransactionResponse),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 404, description = "口座または銘柄が存在しない", body = ProblemDetails),
+        (status = 422, description = "数量が0以下、価格や手数料が負、未来日、売却が保有数量を超える", body = ProblemDetails)
+    )
+)]
 pub async fn create(
     State(state): State<AppState>,
     user: AuthUser,
@@ -143,7 +169,16 @@ pub async fn create(
     tx.commit().await?;
     Ok((StatusCode::CREATED, Json(created.into())))
 }
-
+#[utoipa::path(
+    get, path = "/transactions", tag = "transactions",
+    security(("bearerAuth" = [])),
+    params(ListQuery),
+    responses(
+        (status = 200, description = "取引の一覧（約定日の降順）", body = Vec<TransactionResponse>),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 422, description = "開始日が終了日より後", body = ProblemDetails)
+    )
+)]
 pub async fn list(
     State(state): State<AppState>,
     user: AuthUser,
@@ -170,7 +205,16 @@ pub async fn list(
     let rows = transaction_repo::list(&state.db, user.0, &filter).await?;
     Ok(Json(rows.into_iter().map(Into::into).collect()))
 }
-
+#[utoipa::path(
+    get, path = "/transactions/{id}", tag = "transactions",
+    security(("bearerAuth" = [])),
+    params(("id" = Uuid, Path, description = "取引ID")),
+    responses(
+        (status = 200, description = "取引の詳細", body = TransactionResponse),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 404, description = "取引が存在しない", body = ProblemDetails)
+    )
+)]
 pub async fn show(
     State(state): State<AppState>,
     user: AuthUser,
@@ -181,7 +225,17 @@ pub async fn show(
         .ok_or(AppError::NotFound("取引が見つかりません"))?;
     Ok(Json(found.into()))
 }
-
+#[utoipa::path(
+    delete, path = "/transactions/{id}", tag = "transactions",
+    security(("bearerAuth" = [])),
+    params(("id" = Uuid, Path, description = "取引ID")),
+    responses(
+        (status = 204, description = "削除した"),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 404, description = "取引または銘柄が存在しない", body = ProblemDetails),
+        (status = 422, description = "削除すると以降の売却が保有数量を超える", body = ProblemDetails)
+    )
+)]
 pub async fn delete(
     State(state): State<AppState>,
     user: AuthUser,
