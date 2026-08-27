@@ -13,9 +13,9 @@ use crate::provider::fx::{FxError, FxRateProvider};
 use crate::repository::analytics_repo::{self, HistoryTrade};
 use crate::repository::snapshot_repo::{self, SnapshotWithMeta};
 use crate::service::fx_history;
-
+use utoipa::ToSchema;
 /// asset_history の評価結果がどちらの経路から来たか。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum HistorySource {
     /// 取引履歴から都度再計算した
@@ -24,7 +24,7 @@ pub enum HistorySource {
     Snapshot,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Granularity {
     Day,
@@ -40,7 +40,7 @@ impl Granularity {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupBy {
     None,
@@ -50,26 +50,30 @@ pub enum GroupBy {
     Asset,
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, ToSchema)]
 pub struct HistoryPoint {
     pub date: NaiveDate,
+    #[schema(value_type = String, example = "1234567")]
     pub market_value_jpy: Decimal,
+    #[schema(value_type = String, example = "1000000")]
     pub cost_jpy: Decimal,
     /// その日、価格または約定日レートが引けず評価から外した銘柄数
     pub unpriced_asset_count: i64,
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, ToSchema)]
 pub struct HistorySeries {
+    /// 分類軸のキー。group_by=none なら "total"、口座・銘柄軸ではUUID
     pub key: String,
     /// 画面表示用の名前。enum 軸では日本語名、口座・銘柄軸では登録名。
     pub label: String,
     pub points: Vec<HistoryPoint>,
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, ToSchema)]
 pub struct HistoryResult {
     pub granularity: Granularity,
+    /// 常に "JPY"
     pub base_currency: String,
     /// 為替の補充中に外部APIへ到達できず、キャッシュでしのいだ
     pub fx_stale: bool,

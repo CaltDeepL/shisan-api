@@ -13,9 +13,12 @@
 //! **price_unit あたりの単価**（＝呼値と同じ土俵）で保持する。
 
 use rust_decimal::Decimal;
+use utoipa::ToSchema;
 
 /// 取引種別。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, sqlx::Type, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, sqlx::Type, serde::Serialize, serde::Deserialize, ToSchema,
+)]
 #[sqlx(type_name = "trade_kind", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum TradeKind {

@@ -5,8 +5,9 @@ use uuid::Uuid;
 use crate::provider::fx::FxRateProvider;
 use crate::repository::snapshot_repo::{self, SnapshotRow};
 use crate::service::analytics_service;
+use utoipa::ToSchema;
 
-#[derive(Debug, Default, serde::Serialize)]
+#[derive(Debug, Default, serde::Serialize, ToSchema)]
 pub struct RunReport {
     pub users: i64,
     pub days: i64,

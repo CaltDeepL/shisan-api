@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "account_type", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum AccountType {
@@ -37,7 +38,7 @@ impl AccountType {
 }
 
 /// 内部モデル。API レスポンスは handler 側の DTO に変換して返す
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Account {
     pub id: Uuid,
     pub user_id: Uuid,

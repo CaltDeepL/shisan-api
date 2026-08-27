@@ -9,20 +9,45 @@ use crate::domain::position::TradeKind;
 use crate::error::AppError;
 use crate::repository::transaction_repo::NewTransaction;
 use crate::repository::{account_repo, asset_repo, snapshot_repo, transaction_repo};
+use utoipa::ToSchema;
 
 #[derive(Debug, serde::Deserialize)]
-struct ImportRow {
-    account: String,
-    symbol: String,
-    kind: TradeKind,
-    quantity: Decimal,
-    price: Decimal,
-    fee: Decimal,
-    traded_at: NaiveDate,
+pub struct ImportRow {
+    pub account: String,
+    pub symbol: String,
+    pub kind: TradeKind,
+    pub quantity: Decimal,
+    pub price: Decimal,
+    pub fee: Decimal,
+    pub traded_at: NaiveDate,
     #[serde(default, deserialize_with = "empty_string_as_none")]
-    note: Option<String>,
+    pub note: Option<String>,
     #[serde(default, deserialize_with = "empty_string_as_none")]
-    external_id: Option<String>,
+    pub external_id: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize, ToSchema)]
+pub struct ImportRowError {
+    /// CSVの行番号（ヘッダ行を除く1始まり）
+    pub row: usize,
+    pub message: String,
+}
+/// 検証結果。dry-run のレスポンス、および本登録が失敗したときの422ボディ。
+#[derive(Debug, serde::Serialize, ToSchema)]
+pub struct ImportReport {
+    pub total_rows: usize,
+    /// 挿入対象になる行数
+    pub to_insert: usize,
+    /// 重複としてスキップされる行数
+    pub to_skip_duplicate: usize,
+    /// 1件でもあれば本登録は全体が失敗する
+    pub errors: Vec<ImportRowError>,
+}
+/// 本登録が成功したときの結果。
+#[derive(Debug, serde::Serialize, ToSchema)]
+pub struct ImportResult {
+    pub inserted: usize,
+    pub skipped_duplicate: usize,
 }
 
 fn empty_string_as_none<'de, D>(de: D) -> Result<Option<String>, D::Error>
@@ -36,26 +61,6 @@ where
     } else {
         Some(trimmed.to_owned())
     })
-}
-
-#[derive(Debug, serde::Serialize)]
-pub struct ImportRowError {
-    pub row: usize,
-    pub message: String,
-}
-
-#[derive(Debug, serde::Serialize)]
-pub struct ImportReport {
-    pub total_rows: usize,
-    pub to_insert: usize,
-    pub to_skip_duplicate: usize,
-    pub errors: Vec<ImportRowError>,
-}
-
-#[derive(Debug, serde::Serialize)]
-pub struct ImportResult {
-    pub inserted: usize,
-    pub skipped_duplicate: usize,
 }
 
 struct ParsedRow {

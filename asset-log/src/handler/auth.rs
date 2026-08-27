@@ -4,20 +4,30 @@ use serde::{Deserialize, Serialize};
 use crate::auth::{jwt::JwtKeys, password};
 use crate::error::{AppError, AppResult, FieldError, OnConstraint};
 use crate::middleware::auth::AuthUser;
+use crate::openapi::ProblemDetailsSchema as ProblemDetails;
 use crate::repository::user_repository;
 use crate::state::AppState;
-
-#[derive(Deserialize)]
+use utoipa::ToSchema;
+/// ログイン・登録の認証情報
+#[derive(Deserialize, ToSchema)]
 pub struct Credentials {
+    /// メールアドレス（大文字小文字は区別しない）
+    #[schema(example = "user@example.com")]
     pub email: String,
+    /// パスワード（登録時は12文字以上）
+    #[schema(example = "correct-horse-battery-staple")]
     pub password: String,
 }
-
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct TokenResponse {
     pub access_token: String,
     pub token_type: &'static str,
     pub expires_in: i64,
+}
+/// 認証済みユーザーの情報
+#[derive(Serialize, ToSchema)]
+pub struct MeResponse {
+    pub user_id: uuid::Uuid,
 }
 
 fn field_error(field: &str, message: &str) -> FieldError {
@@ -56,6 +66,17 @@ fn validate(c: &Credentials) -> Result<String, AppError> {
         })
     }
 }
+#[utoipa::path(
+    post,
+    path = "/auth/register",
+    tag = "auth",
+    request_body = Credentials,
+    responses(
+        (status = 201, description = "登録成功。アクセストークンを返す", body = TokenResponse),
+        (status = 409, description = "このメールアドレスは既に登録されている", body = ProblemDetails),
+        (status = 422, description = "入力値が要件を満たしていない", body = ProblemDetails)
+    )
+)]
 
 pub async fn register(
     State(state): State<AppState>,
@@ -75,6 +96,16 @@ pub async fn register(
 
     Ok((StatusCode::CREATED, Json(issue(&state.jwt, user_id)?)))
 }
+#[utoipa::path(
+    post,
+    path = "/auth/login",
+    tag = "auth",
+    request_body = Credentials,
+    responses(
+        (status = 200, description = "ログイン成功", body = TokenResponse),
+        (status = 401, description = "メールアドレスまたはパスワードが違う", body = ProblemDetails)
+    )
+)]
 
 pub async fn login(
     State(state): State<AppState>,
@@ -100,10 +131,19 @@ pub async fn login(
     let user_id = verified.ok_or(AppError::InvalidCredentials)?;
     Ok(Json(issue(&state.jwt, user_id)?))
 }
-
+#[utoipa::path(
+    get,
+    path = "/me",
+    tag = "auth",
+    security(("bearerAuth" = [])),
+    responses(
+        (status = 200, description = "認証済みユーザーの情報", body = MeResponse),
+        (status = 401, description = "認証が必要", body = ProblemDetails)
+    )
+)]
 /// 保護API の動作確認用。タスク#5以降のCRUDも同じ形で書ける。
-pub async fn me(AuthUser(user_id): AuthUser) -> AppResult<Json<serde_json::Value>> {
-    Ok(Json(serde_json::json!({ "user_id": user_id })))
+pub async fn me(AuthUser(user_id): AuthUser) -> AppResult<Json<MeResponse>> {
+    Ok(Json(MeResponse { user_id }))
 }
 
 fn issue(keys: &JwtKeys, user_id: uuid::Uuid) -> Result<TokenResponse, AppError> {

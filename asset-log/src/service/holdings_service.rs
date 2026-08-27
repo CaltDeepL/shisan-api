@@ -16,9 +16,9 @@ use crate::domain::asset::AssetClass;
 use crate::domain::position::{Trade, build_holding, evaluate};
 use crate::error::AppError;
 use crate::repository::holding_repo::{self, LatestPriceRow, TradeRow};
-
+use utoipa::{IntoParams, ToSchema};
 /// `GET /holdings` のクエリパラメータ。
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize, IntoParams)]
 pub struct HoldingsQuery {
     /// 指定した口座のみに絞る。他人の・存在しない口座は 404。
     pub account_id: Option<Uuid>,
@@ -28,7 +28,7 @@ pub struct HoldingsQuery {
 }
 
 /// 保有1行。銘柄 × 口座の単位。
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct HoldingItem {
     pub account_id: Uuid,
     pub account_name: String,
@@ -38,18 +38,28 @@ pub struct HoldingItem {
     pub name: String,
     pub asset_class: AssetClass,
     pub currency: String,
+    #[schema(value_type = String)]
     pub price_unit: Decimal,
 
+    #[schema(value_type = String, example = "100")]
     pub quantity: Decimal,
+    #[schema(value_type = String)]
     pub avg_cost: Decimal,
+    #[schema(value_type = String)]
     pub book_value: Decimal,
+    #[schema(value_type = String)]
     pub realized_pnl: Decimal,
 
-    /// 価格が1件も登録されていない銘柄では、以下4つはすべて `null`。
+    /// 価格が1件も登録されていない銘柄では、以下5つはすべて `null`。
+    #[schema(value_type = Option<String>)]
     pub price: Option<Decimal>,
     pub priced_on: Option<NaiveDate>,
+    #[schema(value_type = Option<String>)]
     pub market_value: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
     pub unrealized_pnl: Option<Decimal>,
+    /// 評価損益率。小数（0.05 なら +5%）
+    #[schema(value_type = Option<String>)]
     pub unrealized_pnl_rate: Option<Decimal>,
 }
 
@@ -57,23 +67,28 @@ pub struct HoldingItem {
 ///
 /// `/holdings` は JPY 換算しないため、合計は必ず通貨単位で分ける
 /// （JPY と USD を足した単一の数値は意味を持たない）。
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct Totals {
     pub currency: String,
     /// 全保有の簿価（価格未登録の銘柄も含む）。
+    #[schema(value_type = String)]
     pub book_value: Decimal,
     /// 価格のある銘柄のみの評価額。
+    #[schema(value_type = String)]
     pub market_value: Decimal,
+    #[schema(value_type = String)]
     pub unrealized_pnl: Decimal,
     /// `unrealized_pnl ÷ 評価できた分の簿価`。分母が0なら `null`。
+    #[schema(value_type = Option<String>)]
     pub unrealized_pnl_rate: Option<Decimal>,
+    #[schema(value_type = String)]
     pub realized_pnl: Decimal,
     /// この通貨のうち、価格が無く評価対象外になった件数。
     pub unpriced_count: usize,
 }
 
 /// 口座ごとの内訳。
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct AccountSummary {
     pub account_id: Uuid,
     pub account_name: String,
@@ -81,7 +96,7 @@ pub struct AccountSummary {
     pub totals: Vec<Totals>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct HoldingsSummary {
     /// 全体で価格が無く評価対象外になった件数。
     pub unpriced_count: usize,
@@ -89,7 +104,7 @@ pub struct HoldingsSummary {
     pub by_account: Vec<AccountSummary>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct HoldingsResponse {
     pub holdings: Vec<HoldingItem>,
     pub summary: HoldingsSummary,

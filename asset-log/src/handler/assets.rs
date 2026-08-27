@@ -14,17 +14,26 @@ use crate::middleware::auth::AuthUser;
 use crate::repository::asset_repo::{self, AssetPatch, NewAsset, escape_like};
 use crate::state::AppState;
 
-#[derive(Debug, Serialize)]
+use crate::openapi::ProblemDetailsSchema as ProblemDetails;
+use utoipa::{IntoParams, ToSchema};
+
+#[derive(Debug, Serialize, ToSchema)]
 pub struct AssetResponse {
-    id: Uuid,
-    symbol: String,
-    name: String,
-    asset_class: AssetClass,
-    currency: String,
+    pub id: Uuid,
+    /// ティッカーや証券コード
+    #[schema(example = "7203")]
+    pub symbol: String,
+    #[schema(example = "トヨタ自動車")]
+    pub name: String,
+    pub asset_class: AssetClass,
+    #[schema(example = "JPY")]
+    pub currency: String,
+    /// 価格の単位（投信は10000、それ以外は1）。文字列で表現される
     #[serde(with = "rust_decimal::serde::str")]
-    price_unit: Decimal,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    #[schema(value_type = String, example = "1")]
+    pub price_unit: Decimal,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl From<Asset> for AssetResponse {
@@ -42,17 +51,20 @@ impl From<Asset> for AssetResponse {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateAssetRequest {
-    symbol: String,
-    name: String,
-    asset_class: AssetClass,
+    pub symbol: String,
+    pub name: String,
+    pub asset_class: AssetClass,
+    /// ISO 4217 の3文字。小文字で送っても大文字に正規化される
     #[serde(default = "default_currency")]
-    currency: String,
+    #[schema(example = "JPY")]
+    pub currency: String,
+    /// 未指定なら資産クラスの既定値（投信は10000、他は1）
     #[serde(default, with = "rust_decimal::serde::str_option")]
-    price_unit: Option<Decimal>,
+    #[schema(value_type = Option<String>, example = "10000")]
+    pub price_unit: Option<Decimal>,
 }
-
 fn default_currency() -> String {
     "JPY".to_string()
 }
@@ -66,7 +78,17 @@ fn normalize_currency(input: &str) -> Result<String, AppError> {
         Err(AppError::unprocessable("currency must be a 3-letter code"))
     }
 }
-
+#[utoipa::path(
+    post, path = "/assets", tag = "assets",
+    security(("bearerAuth" = [])),
+    request_body = CreateAssetRequest,
+    responses(
+        (status = 201, description = "銘柄を作成した", body = AssetResponse),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 409, description = "このシンボルは既に登録されている", body = ProblemDetails),
+        (status = 422, description = "シンボル・名称が空、通貨コードの形式不正、価格単位が0以下", body = ProblemDetails)
+    )
+)]
 pub async fn create_asset(
     State(state): State<AppState>,
     user: AuthUser,
@@ -97,11 +119,20 @@ pub async fn create_asset(
     Ok((StatusCode::CREATED, Json(asset.into())))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams)]
 pub struct ListAssetsQuery {
-    q: Option<String>,
+    /// シンボルまたは名称の部分一致検索
+    pub q: Option<String>,
 }
-
+#[utoipa::path(
+    get, path = "/assets", tag = "assets",
+    security(("bearerAuth" = [])),
+    params(ListAssetsQuery),
+    responses(
+        (status = 200, description = "銘柄の一覧", body = Vec<AssetResponse>),
+        (status = 401, description = "認証が必要", body = ProblemDetails)
+    )
+)]
 pub async fn list_assets(
     State(state): State<AppState>,
     user: AuthUser,
@@ -111,7 +142,16 @@ pub async fn list_assets(
     let assets = asset_repo::list(&state.db, user.0, q.as_deref()).await?;
     Ok(Json(assets.into_iter().map(Into::into).collect()))
 }
-
+#[utoipa::path(
+    get, path = "/assets/{id}", tag = "assets",
+    security(("bearerAuth" = [])),
+    params(("id" = Uuid, Path, description = "銘柄ID")),
+    responses(
+        (status = 200, description = "銘柄の詳細", body = AssetResponse),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 404, description = "銘柄が存在しない", body = ProblemDetails)
+    )
+)]
 pub async fn get_asset(
     State(state): State<AppState>,
     user: AuthUser,
@@ -123,14 +163,28 @@ pub async fn get_asset(
         .ok_or(AppError::NotFound("asset not found"))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct PatchAssetRequest {
-    symbol: Option<String>,
-    name: Option<String>,
+    pub symbol: Option<String>,
+    pub name: Option<String>,
     #[serde(default, with = "rust_decimal::serde::str_option")]
-    price_unit: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
+    pub price_unit: Option<Decimal>,
 }
-
+#[utoipa::path(
+    patch, path = "/assets/{id}", tag = "assets",
+    security(("bearerAuth" = [])),
+    params(("id" = Uuid, Path, description = "銘柄ID")),
+    request_body = PatchAssetRequest,
+    responses(
+        (status = 200, description = "更新後の銘柄", body = AssetResponse),
+        (status = 400, description = "更新する項目が指定されていない", body = ProblemDetails),
+        (status = 401, description = "認証が必要", body = ProblemDetails),
+        (status = 404, description = "銘柄が存在しない", body = ProblemDetails),
+        (status = 409, description = "シンボルが他の銘柄と重複", body = ProblemDetails),
+        (status = 422, description = "シンボル・名称が空、価格単位が0以下", body = ProblemDetails)
+    )
+)]
 pub async fn patch_asset(
     State(state): State<AppState>,
     user: AuthUser,

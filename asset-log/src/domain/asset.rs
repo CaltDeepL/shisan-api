@@ -3,7 +3,8 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
+use utoipa::ToSchema;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "asset_class", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum AssetClass {
@@ -35,7 +36,7 @@ impl AssetClass {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Asset {
     pub id: Uuid,
     pub user_id: Uuid,

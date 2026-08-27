@@ -3,6 +3,7 @@ use rust_decimal::Decimal;
 use rust_decimal::prelude::ToPrimitive;
 use serde::Serialize;
 use sqlx::PgPool;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::provider::fx::{FxError, FxRateProvider};
@@ -17,22 +18,28 @@ pub struct Slice {
 }
 
 /// レスポンスの1項目
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct AllocationItem {
     pub key: String,
     pub label: String,
+    #[schema(value_type = String, example = "500000")]
     pub value_jpy: Decimal,
+    /// 構成比（パーセント）。合計は必ず 100.00 になる
+    #[schema(value_type = String, example = "33.34")]
     pub ratio: Decimal,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct AllocationResult {
     pub as_of: NaiveDate,
+    /// 常に "JPY"
     pub base_currency: String,
     pub group_by: GroupBy,
     /// 売買のある銘柄の評価額のみが対象。現金・預金残高は含まない。
+    #[schema(example = "securities_only")]
     pub scope: &'static str,
     pub fx_stale: bool,
+    #[schema(value_type = String)]
     pub total_value_jpy: Decimal,
     pub unpriced_asset_count: i64,
     pub items: Vec<AllocationItem>,
