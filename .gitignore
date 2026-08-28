@@ -25,5 +25,5 @@ dist-ssr
 /target
 .env
 .env.local
- node_modules/ dist/
- .env*
+!.env.example
+!**/.env.example
