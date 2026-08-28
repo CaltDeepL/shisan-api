@@ -1,0 +1,41 @@
+name: Daily Snapshot
+
+on:
+  schedule:
+    # JST 07:00 = UTC 22:00（前日）
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up the service
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 \
+              "${{ secrets.API_BASE_URL }}/health" || true)
+            echo "attempt $i: /health -> $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 15
+          done
+          echo "service did not wake up in time"
+          exit 1
+
+      - name: Run snapshot
+        run: |
+          response=$(curl -sS -w '\n%{http_code}' -X POST \
+            --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
+            -H "Authorization: Bearer ${{ secrets.SNAPSHOT_JOB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.API_BASE_URL }}/snapshots/run")
+
+          body=$(echo "$response" | sed '$d')
+          code=$(echo "$response" | tail -n1)
+
+          echo "status: $code"
+          echo "body: $body"
+
+          if [ "$code" != "200" ] && [ "$code" != "202" ]; then
+            exit 1
+          fi
