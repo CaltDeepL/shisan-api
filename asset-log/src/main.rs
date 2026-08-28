@@ -74,7 +74,7 @@ async fn run_server() {
     // 設定不備は起動時に落とす（実行中に気づくより安全）
     let config = Config::from_env().expect("設定の読み込みに失敗しました");
 
-        let pool = PgPoolOptions::new()
+    let pool = PgPoolOptions::new()
         .max_connections(5)
         .min_connections(0)
         .acquire_timeout(std::time::Duration::from_secs(30))
@@ -84,7 +84,7 @@ async fn run_server() {
         .connect(&config.database_url)
         .await
         .expect("failed to connect to database");
-    
+
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
