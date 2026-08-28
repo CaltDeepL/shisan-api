@@ -1,7 +1,6 @@
 use argon2::Argon2;
-use argon2::password_hash::{
-    PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng,
-};
+use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use rand_core::OsRng;
 use std::sync::LazyLock;
 
 /// ユーザー不在時に検証を空回しするためのダミー。
