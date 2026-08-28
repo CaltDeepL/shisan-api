@@ -2,13 +2,21 @@ name: Daily Snapshot
 
 on:
   schedule:
-    # JST 07:00 = UTC 22:00（前日）
     - cron: '0 22 * * *'
   workflow_dispatch:
+    inputs:
+      from:
+        description: '開始日 (YYYY-MM-DD、空なら LOOKBACK_DAYS 日前)'
+        required: false
+      to:
+        description: '終了日 (YYYY-MM-DD、空なら当日)'
+        required: false
 
 jobs:
   snapshot:
     runs-on: ubuntu-latest
+    env:
+      LOOKBACK_DAYS: 2
     steps:
       - name: Wake up the service
         run: |
@@ -24,9 +32,17 @@ jobs:
 
       - name: Run snapshot
         run: |
+          TO="${{ inputs.to }}"
+          FROM="${{ inputs.from }}"
+          [ -z "$TO" ] && TO=$(TZ=Asia/Tokyo date +%F)
+          [ -z "$FROM" ] && FROM=$(TZ=Asia/Tokyo date -d "$LOOKBACK_DAYS days ago" +%F)
+          echo "range: $FROM .. $TO"
+
           response=$(curl -sS -w '\n%{http_code}' -X POST \
             --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
             -H "Authorization: Bearer ${{ secrets.SNAPSHOT_JOB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"from\":\"$FROM\",\"to\":\"$TO\"}" \
             "${{ secrets.API_BASE_URL }}/snapshots/run")
 
           body=$(echo "$response" | sed '$d')
