@@ -27,7 +27,12 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Healthcheck) => run_healthcheck(),
+        Some(Commands::Healthcheck) => {
+            if let Err(e) = run_healthcheck() {
+                eprintln!("Healthcheck failed: {e}");
+                process::exit(1);
+            }
+        }
         None => {
             let rt = tokio::runtime::Runtime::new().expect("failed to build tokio runtime");
             rt.block_on(run_server());
@@ -35,25 +40,30 @@ fn main() {
     }
 }
 
-fn run_healthcheck() {
+fn run_healthcheck() -> anyhow::Result<()> {
     let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     let url = format!("http://127.0.0.1:{port}/health");
 
-    let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(3))
-        .build()
-        .unwrap();
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?;
 
-    match client.get(&url).send() {
-        Ok(response) if response.status().is_success() => {
-            println!("Healthcheck passed.");
-            process::exit(0);
-        }
-        _ => {
-            eprintln!("Healthcheck failed.");
-            process::exit(1);
-        }
+    let ok = rt.block_on(async {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(3))
+            .build()?;
+        let res = client.get(&url).send().await?;
+        anyhow::Ok(res.status().is_success())
+    })?;
+
+    if ok {
+        println!("Healthcheck passed.");
+    } else {
+        eprintln!("Healthcheck failed.");
+        process::exit(1);
     }
+
+    Ok(())
 }
 
 async fn run_server() {
