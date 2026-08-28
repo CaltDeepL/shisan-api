@@ -27,7 +27,6 @@ jobs:
           response=$(curl -sS -w '\n%{http_code}' -X POST \
             --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
             -H "Authorization: Bearer ${{ secrets.SNAPSHOT_JOB_TOKEN }}" \
-            -H "Content-Type: application/json" \
             "${{ secrets.API_BASE_URL }}/snapshots/run")
 
           body=$(echo "$response" | sed '$d')
