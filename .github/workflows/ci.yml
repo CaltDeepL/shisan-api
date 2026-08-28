@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feature/backend]
+    paths:
+      - 'asset-log/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'asset-log/**'
+      - '.github/workflows/ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: fmt / clippy / test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: assetlog
+          POSTGRES_PASSWORD: assetlog
+          POSTGRES_DB: assetlog
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U assetlog"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://assetlog:assetlog@localhost:5432/assetlog
+      SQLX_OFFLINE: "true"
+      RUST_BACKTRACE: "1"
+
+    defaults:
+      run:
+        working-directory: asset-log
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.96.0"
+          components: rustfmt, clippy
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: asset-log
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --all-targets

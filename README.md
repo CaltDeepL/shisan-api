@@ -211,11 +211,11 @@ HEALTHCHECK CMD ["./asset-log", "healthcheck"]
 | 8 | 取引 CRUD | 完了 |
 | 9 | `/holdings` エンドポイント | 完了 |
 | 10 | FxRateProvider（Frankfurter） | 完了 |
-| 11 | analytics（資産推移・アセットアロケーション） | 完了 |
-| 12 | 資産配分（GET /analytics/allocation | 完了 |
-| 13 | CSVインポート（取引履歴の一括取込） | 完了 |
+| 11 | 資産推移（`GET /analytics/asset-history`） | 完了 |
+| 12 | 資産配分（`GET /analytics/allocation`） | 完了 |
+| 13 | CSV インポート（取引履歴の一括取込） | 完了 |
 | 14 | 日次スナップショット（バッチ） | 完了 |
-| 15 | OpenAPI | 完了 |
+| 15 | OpenAPI（utoipa / Swagger UI） | 完了 |
 | 16 | デプロイ・GitHub Actions | 未着手 |
 
 XIRR（金額加重収益率）と Google ログイン（OIDC）は、16タスク完了後の追加機能として [`asset-tracker-design.md`](asset-log/docs/asset-tracker-design.md) に追補しています。

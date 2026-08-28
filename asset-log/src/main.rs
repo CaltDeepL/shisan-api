@@ -76,6 +76,11 @@ async fn run_server() {
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
+        .min_connections(0)
+        .acquire_timeout(std::time::Duration::from_secs(30))
+        .idle_timeout(std::time::Duration::from_secs(120))
+        .max_lifetime(std::time::Duration::from_secs(1800))
+        .test_before_acquire(true)
         .connect(&config.database_url)
         .await
         .expect("failed to connect to database");

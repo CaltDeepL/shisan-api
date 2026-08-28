@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use asset_log::{
     auth::{job::JobToken, jwt::JwtKeys},
     provider::{
