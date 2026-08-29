@@ -1,20 +1,32 @@
-import { useEffect, useState } from "react";
-
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { RequireAuth } from "@/routes/RequireAuth";
+import { GuestOnly } from "@/routes/GuestOnly";
+import { AppLayout } from "@/routes/AppLayout";
+import { LoginPage } from "@/pages/LoginPage";
+import { RegisterPage } from "@/pages/RegisterPage";
+import { DashboardPage } from "@/pages/DashboardPage";
 
 export default function App() {
-  const [status, setStatus] = useState("接続中...");
-
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/health`)
-      .then((r) => r.json())
-      .then((d) => setStatus(d.status))
-      .catch((e) => setStatus(`NG: ${e.message}`));
-  }, []);
-
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">shisan-api</h1>
-      <p className="mt-2 text-gray-600">API status: {status}</p>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<GuestOnly />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+
+          <Route element={<RequireAuth />}>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<DashboardPage />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
