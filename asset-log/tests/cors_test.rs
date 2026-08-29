@@ -1,7 +1,7 @@
 mod common;
 
 use axum::body::Body;
-use axum::http::{header, Method, Request, StatusCode};
+use axum::http::{Method, Request, StatusCode, header};
 use tower::ServiceExt; // oneshot
 
 const ALLOWED: &str = "http://localhost:5173";
@@ -67,9 +67,10 @@ async fn disallowed_origin_gets_no_cors_header(db: sqlx::PgPool) {
         .unwrap();
 
     assert_eq!(res.status(), StatusCode::OK);
-    assert!(!res
-        .headers()
-        .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN));
+    assert!(
+        !res.headers()
+            .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+    );
 }
 
 /// 単純リクエストにヘッダが付く
@@ -131,7 +132,8 @@ async fn empty_origin_list_allows_nobody(db: sqlx::PgPool) {
         .await
         .unwrap();
 
-    assert!(!res
-        .headers()
-        .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN));
+    assert!(
+        !res.headers()
+            .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+    );
 }
