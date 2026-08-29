@@ -25,6 +25,7 @@ services:
       RUST_LOG: ${RUST_LOG}
       JWT_SECRET: ${JWT_SECRET}
       SNAPSHOT_JOB_TOKEN: ${SNAPSHOT_JOB_TOKEN}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     ports:
       - "8080:8080"
     depends_on:

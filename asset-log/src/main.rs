@@ -83,7 +83,13 @@ async fn run_server() {
     let _ = dotenvy::dotenv();
     // 設定不備は起動時に落とす（実行中に気づくより安全）
     let config = Config::from_env().expect("設定の読み込みに失敗しました");
-
+    if config.cors_allowed_origins.is_empty() {
+        tracing::warn!(
+            "CORS_ALLOWED_ORIGINS が未設定です（ブラウザからのリクエストは拒否されます）"
+        );
+    } else {
+        tracing::info!(origins = ?config.cors_allowed_origins, "CORS allowed origins");
+    }
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .min_connections(0)
@@ -124,7 +130,7 @@ async fn run_server() {
         job_token: JobToken::from_config(&config),
     };
 
-    let app = asset_log::app(state);
+    let app = asset_log::app(state, &config.cors_allowed_origins);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
         .await

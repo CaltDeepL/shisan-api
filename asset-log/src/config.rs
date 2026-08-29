@@ -10,6 +10,8 @@ pub struct Config {
     pub fx_max_business_days: i64, // 既定 2
     /// バッチ用トークン。未設定なら /snapshots/run を 503 で拒否する
     pub snapshot_job_token: Option<String>,
+    /// CORS 許可オリジン。未設定（空）ならブラウザからのリクエストは全て拒否される
+    pub cors_allowed_origins: Vec<String>,
 }
 
 impl Config {
@@ -51,6 +53,53 @@ impl Config {
                 Ok(v) => Some(v),
                 Err(_) => None,
             },
+            cors_allowed_origins: parse_cors_origins(
+                &std::env::var("CORS_ALLOWED_ORIGINS").unwrap_or_default(),
+            )?,
         })
+    }
+}
+/// カンマ区切りの許可オリジンをパースする。
+/// 空要素は捨て、末尾スラッシュは除去する。
+fn parse_cors_origins(raw: &str) -> anyhow::Result<Vec<String>> {
+    raw.split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(|s| {
+            if !s.starts_with("http://") && !s.starts_with("https://") {
+                anyhow::bail!("CORS_ALLOWED_ORIGINS はスキームを含めてください（不正な値: {s}）");
+            }
+            Ok(s.trim_end_matches('/').to_string())
+        })
+        .collect()
+}
+#[cfg(test)]
+mod tests {
+    use super::parse_cors_origins;
+
+    #[test]
+    fn empty_string_yields_no_origins() {
+        assert!(parse_cors_origins("").unwrap().is_empty());
+    }
+
+    #[test]
+    fn parses_multiple_origins_with_spaces() {
+        assert_eq!(
+            parse_cors_origins("http://localhost:5173, https://example.com").unwrap(),
+            vec!["http://localhost:5173", "https://example.com"],
+        );
+    }
+
+    #[test]
+    fn strips_trailing_slash_and_blank_entries() {
+        assert_eq!(
+            parse_cors_origins("http://localhost:5173/,,https://example.com/").unwrap(),
+            vec!["http://localhost:5173", "https://example.com"],
+        );
+    }
+
+    #[test]
+    fn rejects_origin_without_scheme() {
+        assert!(parse_cors_origins("localhost:5173").is_err());
     }
 }

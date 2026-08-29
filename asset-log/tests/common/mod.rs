@@ -24,7 +24,7 @@ use std::{sync::Arc, time::Duration};
 /// テスト用のルータを組む。JWT の鍵はテスト内で固定。
 /// 外部APIは到達不能なURLを指すので、fx を叩かないテストはこれで足りる。
 pub fn test_app(db: PgPool) -> Router {
-    test_app_with_fx(db, "http://127.0.0.1:1/unreachable", StalePolicy::default())
+    test_app_with_cors(db, &[])
 }
 
 /// 為替のテスト用。`fx_base_url` に wiremock のURLを渡す。
@@ -36,12 +36,15 @@ pub fn test_app_with_fx(db: PgPool, fx_base_url: &str, policy: StalePolicy) -> R
         .expect("failed to build FX client");
     let fx = Arc::new(CachedFxProvider::new(client, db.clone(), policy));
 
-    asset_log::app(AppState {
-        db,
-        jwt,
-        fx,
-        job_token: JobToken::disabled(),
-    })
+    asset_log::app(
+        AppState {
+            db,
+            jwt,
+            fx,
+            job_token: JobToken::disabled(),
+        },
+        &[],
+    )
 }
 
 pub struct TestUser {
@@ -116,7 +119,7 @@ pub async fn request(
 #[allow(dead_code)]
 pub const JOB_TOKEN: &str = "test-job-token-0123456789abcdefghij";
 
-/// バッチ実行を有効にしたルータ。
+/// バッチ実行を有効にしたルータ。snapshots_test が使う。
 #[allow(dead_code)]
 pub fn test_app_with_job_token(db: PgPool) -> Router {
     let jwt = JwtKeys::new("test-secret-for-integration-tests", 60);
@@ -129,10 +132,37 @@ pub fn test_app_with_job_token(db: PgPool) -> Router {
         StalePolicy::default(),
     ));
 
-    asset_log::app(AppState {
-        db,
-        jwt,
-        fx,
-        job_token: JobToken::new(JOB_TOKEN),
-    })
+    asset_log::app(
+        AppState {
+            db,
+            jwt,
+            fx,
+            job_token: JobToken::new(JOB_TOKEN),
+        },
+        &[],
+    )
+}
+
+/// CORS 許可オリジンを指定してルータを組む。それ以外は test_app と同じ構成。
+#[allow(dead_code)]
+pub fn test_app_with_cors(db: PgPool, cors_origins: &[String]) -> Router {
+    let jwt = JwtKeys::new("test-secret-for-integration-tests", 60);
+    let client =
+        FrankfurterClient::new("http://127.0.0.1:1/unreachable", Duration::from_millis(500))
+            .expect("failed to build FX client");
+    let fx = Arc::new(CachedFxProvider::new(
+        client,
+        db.clone(),
+        StalePolicy::default(),
+    ));
+
+    asset_log::app(
+        AppState {
+            db,
+            jwt,
+            fx,
+            job_token: JobToken::disabled(),
+        },
+        cors_origins,
+    )
 }

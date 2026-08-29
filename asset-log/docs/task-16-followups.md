@@ -66,7 +66,14 @@ TO=$(TZ=Asia/Tokyo date +%F)
 FROM=$(TZ=Asia/Tokyo date -d "$LOOKBACK_DAYS days ago" +%F)
 ```
 
-`workflow_dispatch` に `from` / `to` の入力を追加し、過去取引を追加したときの手動バックフィルにも使えるようにした。遡り日数は `env.LOOKBACK_DAYS` の1箇所に集約。
+`workflow_dispatch` に `from` / `to` の入力を追加し、過去取引を追加したときの手動バックフィルにも使えるようにした。遡り日数は `env.LOOKBACK_DAYS` の1箇所に集約。なお実装時に、`FROM=` の代入と `echo` が1行に結合していたバグを踏んでいる(詳細は「つまずいた点と教訓」6)。CI では検証できないため、変更後は必ず手動実行してログを確認する。
+
+```bash
+gh workflow run "Daily Snapshot"
+gh run watch
+```
+
+`range:` 行に JST の日付が2つとも出ていれば正常。片方でも空なら代入が効いていない。
 
 ### 判断の根拠
 
@@ -212,8 +219,21 @@ cargo tree -e features -i rand_core@0.6.4
 ```yaml
 description: '開始日 (YYYY-MM-DD、空なら2日前＝直近3日分)'
 ```
+### 6. `VAR=value command` はコマンド固有の環境変数になる
 
-### 6. Cargo.lock の変更は必ずコミットに含める
+snapshot.yml で、行の結合により以下の形になっていた。
+
+```bash
+FROM=$(TZ=Asia/Tokyo date -d "$LOOKBACK_DAYS days ago" +%F) echo "range: $FROM .. $TO"
+```
+
+これは代入文ではなく、`echo` の実行環境にだけ `FROM` を設定する構文。シェル本体の `$FROM` は空のままとなり、後続の `curl` に `{"from":"","to":"..."}` が飛ぶ。
+
+さらに悪いことに、`echo` の引数は代入が反映される**前**に展開されるため、ログにも空文字が出る。「ログの `range:` 行で範囲を確認する」という検証手段そのものが同時に潰れており、失敗が表面化しない。
+
+**教訓**: シェルの構文差でサイレントに壊れるパターンは、タスク#16 で踏んだ zsh の `read -p` 非互換と同じカテゴリ。ワークフローのシェルスクリプトは、変数が実際に渡っているかをログで確認できる形にしたうえで、`workflow_dispatch` で一度手動実行して目視する。
+
+### 7. Cargo.lock の変更は必ずコミットに含める
 
 依存整理で `Cargo.lock` が439行削減された。これが欠けると Docker ビルドが古い依存で走る。
 
@@ -253,6 +273,7 @@ cargo machete --with-metadata
 cargo build --release && cargo test && cargo clippy --all-targets -- -D warnings
 
 # .sqlx の陳腐化チェック(ローカル)
+# --all-targets は内部の cargo check へ渡す引数なので `--` の区切りが必須
 cargo sqlx prepare --check -- --all-targets
 # 差分が出た場合の再生成
 cargo sqlx prepare -- --all-targets && git status .sqlx/

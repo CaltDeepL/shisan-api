@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod config;
+pub mod cors;
 pub mod domain;
 pub mod error;
 pub mod handler;
@@ -20,7 +21,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use crate::openapi::ApiDoc;
 
-pub fn app(state: AppState) -> Router {
+pub fn app(state: AppState, cors_origins: &[String]) -> Router {
     let (documented, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(handler::health::health))
         .routes(routes!(handler::auth::register))
@@ -62,4 +63,5 @@ pub fn app(state: AppState) -> Router {
     documented
         .with_state(state)
         .merge(SwaggerUi::new("/docs").url("/openapi.json", api))
+        .layer(cors::cors_layer(cors_origins))
 }
