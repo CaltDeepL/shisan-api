@@ -38,7 +38,7 @@ impl AccountType {
 }
 
 /// 内部モデル。API レスポンスは handler 側の DTO に変換して返す
-#[derive(Debug, Clone, ToSchema)]
+#[derive(Debug, Clone)]
 pub struct Account {
     pub id: Uuid,
     pub user_id: Uuid,

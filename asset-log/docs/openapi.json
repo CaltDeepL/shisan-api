@@ -1297,7 +1297,7 @@
             },
             "description": "口座が存在しない"
           },
-          "409": {
+          "422": {
             "content": {
               "application/json": {
                 "schema": {
