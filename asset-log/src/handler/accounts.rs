@@ -203,7 +203,7 @@ pub async fn update(
         (status = 204, description = "削除した"),
         (status = 401, description = "認証が必要", body = ProblemDetails),
         (status = 404, description = "口座が存在しない", body = ProblemDetails),
-        (status = 409, description = "取引が紐づいているため削除できない", body = ProblemDetails)
+        (status = 422, description = "取引が紐づいているため削除できない", body = ProblemDetails)
     )
 )]
 pub async fn delete(
