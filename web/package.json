@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "typecheck": "tsc -b --force",
     "gen:api": "npx openapi-typescript ../asset-log/docs/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {

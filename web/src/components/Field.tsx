@@ -24,7 +24,10 @@ export function Field({
 
   return (
     <div className="space-y-1">
-      <label htmlFor={name} className="block text-sm font-medium text-slate-700">
+      <label
+        htmlFor={name}
+        className="block text-sm font-medium text-slate-700"
+      >
         {label}
       </label>
       <input

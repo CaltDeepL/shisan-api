@@ -21,7 +21,8 @@ export function RegisterPage() {
   const fieldErrors =
     error instanceof ApiError && error.status === 422 ? error.fieldErrors : {};
   // 422 はフィールド側に出すので、上部には出さない
-  const formError = error instanceof ApiError && error.status === 422 ? null : error;
+  const formError =
+    error instanceof ApiError && error.status === 422 ? null : error;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

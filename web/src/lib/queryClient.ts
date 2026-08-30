@@ -6,7 +6,11 @@ export const queryClient = new QueryClient({
     queries: {
       retry: (failureCount, error) => {
         // 4xx は何度投げても結果が変わらない。リトライは通信エラーと5xxのみ。
-        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        if (
+          error instanceof ApiError &&
+          error.status >= 400 &&
+          error.status < 500
+        ) {
           return false;
         }
         return failureCount < 2;

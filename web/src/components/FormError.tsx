@@ -4,9 +4,7 @@ export function FormError({ error }: { error: unknown }) {
   if (!error) return null;
 
   const isApiError = error instanceof ApiError;
-  const message = isApiError
-    ? error.message
-    : "予期しないエラーが発生しました";
+  const message = isApiError ? error.message : "予期しないエラーが発生しました";
 
   // 422 はフィールド側に出しているので、ここでは本文だけ出す
   const traceId =

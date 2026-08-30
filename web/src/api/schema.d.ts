@@ -4,1950 +4,1951 @@
  */
 
 export interface paths {
-    "/accounts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["list"];
-        put?: never;
-        post: operations["create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/accounts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/accounts/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["get"];
-        put?: never;
-        post?: never;
-        delete: operations["delete"];
-        options?: never;
-        head?: never;
-        patch: operations["update"];
-        trace?: never;
+    get: operations["list"];
+    put?: never;
+    post: operations["create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/accounts/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/analytics/allocation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["allocation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["get"];
+    put?: never;
+    post?: never;
+    delete: operations["delete"];
+    options?: never;
+    head?: never;
+    patch: operations["update"];
+    trace?: never;
+  };
+  "/analytics/allocation": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/analytics/asset-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["asset_history"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["allocation"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/analytics/asset-history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/assets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["list_assets"];
-        put?: never;
-        post: operations["create_asset"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["asset_history"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/assets/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["get_asset"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["patch_asset"];
-        trace?: never;
+    get: operations["list_assets"];
+    put?: never;
+    post: operations["create_asset"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/assets/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["get_asset"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["patch_asset"];
+    trace?: never;
+  };
+  "/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations["login"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fx/rates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["get_rate"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations["register"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fx/rates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["health"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["get_rate"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/holdings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * `GET /holdings?account_id=<uuid>&include_closed=<bool>`
-         * @description - `account_id`: 省略時は全口座。他人の・存在しない口座は 404
-         *     - `include_closed`: 既定 `false`。`true` で全売却済み（数量0）のポジションも含める
-         *     - `include_unpriced`: 既定 `false`。`true` で価格が無く評価対象外になったポジションも含める
-         *     - `include_zero`: 既定 `false`。`true` で数量0のポジションも含める
-         */
-        get: operations["list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["health"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/holdings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/import/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * `GET /holdings?account_id=<uuid>&include_closed=<bool>`
+     * @description - `account_id`: 省略時は全口座。他人の・存在しない口座は 404
+     *     - `include_closed`: 既定 `false`。`true` で全売却済み（数量0）のポジションも含める
+     *     - `include_unpriced`: 既定 `false`。`true` で価格が無く評価対象外になったポジションも含める
+     *     - `include_zero`: 既定 `false`。`true` で数量0のポジションも含める
+     */
+    get: operations["list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/import/transactions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/import/transactions/dry-run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["dry_run"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations["create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/import/transactions/dry-run": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 保護API の動作確認用。タスク#5以降のCRUDも同じ形で書ける。 */
-        get: operations["me"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations["dry_run"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/prices": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["upsert_prices"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 保護API の動作確認用。タスク#5以降のCRUDも同じ形で書ける。 */
+    get: operations["me"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/prices": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/prices/{asset_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["get_price_history"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations["upsert_prices"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/prices/{asset_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/snapshots/run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** バッチ実行。認証は JobAuth（ユーザーJWTではない）。 */
-        post: operations["run"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["get_price_history"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/snapshots/run": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["list"];
-        put?: never;
-        post: operations["create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** バッチ実行。認証は JobAuth（ユーザーJWTではない）。 */
+    post: operations["run"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/transactions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/transactions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["show"];
-        put?: never;
-        post?: never;
-        delete: operations["delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["list"];
+    put?: never;
+    post: operations["create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/transactions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get: operations["show"];
+    put?: never;
+    post?: never;
+    delete: operations["delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        AccountResponse: {
-            account_type: components["schemas"]["AccountType"];
-            /** Format: date-time */
-            created_at: string;
-            currency: string;
-            /** Format: uuid */
-            id: string;
-            institution?: string | null;
-            name: string;
-            /** Format: date-time */
-            updated_at: string;
-            withholding?: boolean | null;
-        };
-        /** @description 口座ごとの内訳。 */
-        AccountSummary: {
-            /** Format: uuid */
-            account_id: string;
-            account_name: string;
-            account_type: components["schemas"]["AccountType"];
-            totals: components["schemas"]["Totals"][];
-        };
-        /** @enum {string} */
-        AccountType: "tokutei" | "ippan" | "nisa_tsumitate" | "nisa_growth" | "ideco" | "bank";
-        /** @description レスポンスの1項目 */
-        AllocationItem: {
-            key: string;
-            label: string;
-            /**
-             * @description 構成比（パーセント）。合計は必ず 100.00 になる
-             * @example 33.34
-             */
-            ratio: string;
-            /** @example 500000 */
-            value_jpy: string;
-        };
-        AllocationResult: {
-            /** Format: date */
-            as_of: string;
-            /** @description 常に "JPY" */
-            base_currency: string;
-            fx_stale: boolean;
-            group_by: components["schemas"]["GroupBy"];
-            items: components["schemas"]["AllocationItem"][];
-            /**
-             * @description 売買のある銘柄の評価額のみが対象。現金・預金残高は含まない。
-             * @example securities_only
-             */
-            scope: string;
-            total_value_jpy: string;
-            /** Format: int64 */
-            unpriced_asset_count: number;
-        };
-        /** @enum {string} */
-        AssetClass: "equity" | "etf" | "mutual_fund" | "bond" | "cash" | "other";
-        AssetResponse: {
-            asset_class: components["schemas"]["AssetClass"];
-            /** Format: date-time */
-            created_at: string;
-            /** @example JPY */
-            currency: string;
-            /** Format: uuid */
-            id: string;
-            /** @example トヨタ自動車 */
-            name: string;
-            /**
-             * @description 価格の単位（投信は10000、それ以外は1）。文字列で表現される
-             * @example 1
-             */
-            price_unit: string;
-            /**
-             * @description ティッカーや証券コード
-             * @example 7203
-             */
-            symbol: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        CreateAccountRequest: {
-            account_type: components["schemas"]["AccountType"];
-            currency?: string;
-            institution?: string | null;
-            name: string;
-            withholding?: boolean | null;
-        };
-        CreateAssetRequest: {
-            asset_class: components["schemas"]["AssetClass"];
-            /**
-             * @description ISO 4217 の3文字。小文字で送っても大文字に正規化される
-             * @example JPY
-             */
-            currency?: string;
-            name: string;
-            /**
-             * @description 未指定なら資産クラスの既定値（投信は10000、他は1）
-             * @example 10000
-             */
-            price_unit?: string | null;
-            symbol: string;
-        };
-        CreateTransaction: {
-            /** Format: uuid */
-            account_id: string;
-            /** Format: uuid */
-            asset_id: string;
-            /**
-             * @description 手数料。0以上。未指定なら0
-             * @example 550
-             */
-            fee?: string;
-            kind: components["schemas"]["TradeKind"];
-            note?: string | null;
-            /**
-             * @description 単価。0以上
-             * @example 2350.5
-             */
-            price: string;
-            /**
-             * @description 数量。正の数
-             * @example 100
-             */
-            quantity: string;
-            /**
-             * Format: date
-             * @description 約定日。未来日は不可（日本時間で判定）
-             */
-            traded_at: string;
-        };
-        /** @description ログイン・登録の認証情報 */
-        Credentials: {
-            /**
-             * @description メールアドレス（大文字小文字は区別しない）
-             * @example user@example.com
-             */
-            email: string;
-            /**
-             * @description パスワード（登録時は12文字以上）
-             * @example correct-horse-battery-staple
-             */
-            password: string;
-        };
-        FieldError: {
-            /**
-             * @description エラーが発生した入力項目名
-             * @example quantity
-             */
-            field: string;
-            /**
-             * @description 項目ごとのエラー内容
-             * @example 数量は正の数である必要があります
-             */
-            message: string;
-        };
-        FxRateResponse: {
-            base: string;
-            /** Format: date-time */
-            fetched_at: string;
-            /** @description 外部APIに到達できずキャッシュで代替した場合 true */
-            is_stale: boolean;
-            quote: string;
-            /** @example 157.23 */
-            rate: string;
-            /**
-             * Format: date
-             * @description 実際にレートが成立した日。要求した `on` と一致するとは限らない
-             */
-            rated_on: string;
-        };
-        /** @enum {string} */
-        Granularity: "day" | "month";
-        /** @enum {string} */
-        GroupBy: "none" | "account_type" | "asset_class" | "account" | "asset";
-        /** @description ヘルスチェックのレスポンス */
-        HealthResponse: {
-            /** @description 常に "ok" */
-            status: string;
-        };
-        HistoryPoint: {
-            /** @example 1000000 */
-            cost_jpy: string;
-            /** Format: date */
-            date: string;
-            /** @example 1234567 */
-            market_value_jpy: string;
-            /**
-             * Format: int64
-             * @description その日、価格または約定日レートが引けず評価から外した銘柄数
-             */
-            unpriced_asset_count: number;
-        };
-        HistoryResult: {
-            /** @description 常に "JPY" */
-            base_currency: string;
-            /** @description 為替の補充中に外部APIへ到達できず、キャッシュでしのいだ */
-            fx_stale: boolean;
-            granularity: components["schemas"]["Granularity"];
-            series: components["schemas"]["HistorySeries"][];
-            source: components["schemas"]["HistorySource"];
-        };
-        HistorySeries: {
-            /** @description 分類軸のキー。group_by=none なら "total"、口座・銘柄軸ではUUID */
-            key: string;
-            /** @description 画面表示用の名前。enum 軸では日本語名、口座・銘柄軸では登録名。 */
-            label: string;
-            points: components["schemas"]["HistoryPoint"][];
-        };
-        /**
-         * @description asset_history の評価結果がどちらの経路から来たか。
-         * @enum {string}
-         */
-        HistorySource: "computed" | "snapshot";
-        /** @description 保有1行。銘柄 × 口座の単位。 */
-        HoldingItem: {
-            /** Format: uuid */
-            account_id: string;
-            account_name: string;
-            account_type: components["schemas"]["AccountType"];
-            asset_class: components["schemas"]["AssetClass"];
-            /** Format: uuid */
-            asset_id: string;
-            avg_cost: string;
-            book_value: string;
-            currency: string;
-            market_value?: string | null;
-            name: string;
-            /** @description 価格が1件も登録されていない銘柄では、以下5つはすべて `null`。 */
-            price?: string | null;
-            price_unit: string;
-            /** Format: date */
-            priced_on?: string | null;
-            /** @example 100 */
-            quantity: string;
-            realized_pnl: string;
-            symbol: string;
-            unrealized_pnl?: string | null;
-            /** @description 評価損益率。小数（0.05 なら +5%） */
-            unrealized_pnl_rate?: string | null;
-        };
-        HoldingsResponse: {
-            holdings: components["schemas"]["HoldingItem"][];
-            summary: components["schemas"]["HoldingsSummary"];
-        };
-        HoldingsSummary: {
-            by_account: components["schemas"]["AccountSummary"][];
-            totals: components["schemas"]["Totals"][];
-            /** @description 全体で価格が無く評価対象外になった件数。 */
-            unpriced_count: number;
-        };
-        /** @description 検証結果。dry-run のレスポンス、および本登録が失敗したときの422ボディ。 */
-        ImportReport: {
-            /** @description 1件でもあれば本登録は全体が失敗する */
-            errors: components["schemas"]["ImportRowError"][];
-            /** @description 挿入対象になる行数 */
-            to_insert: number;
-            /** @description 重複としてスキップされる行数 */
-            to_skip_duplicate: number;
-            total_rows: number;
-        };
-        ImportRequest: {
-            /**
-             * @description CSV本文。ヘッダ行を含む
-             * @example account_id,asset_id,kind,quantity,price,fee,traded_at
-             *     ...
-             */
-            csv_content: string;
-        };
-        /** @description 本登録が成功したときの結果。 */
-        ImportResult: {
-            inserted: number;
-            skipped_duplicate: number;
-        };
-        ImportRowError: {
-            message: string;
-            /** @description CSVの行番号（ヘッダ行を除く1始まり） */
-            row: number;
-        };
-        /** @description 認証済みユーザーの情報 */
-        MeResponse: {
-            /** Format: uuid */
-            user_id: string;
-        };
-        PatchAssetRequest: {
-            name?: string | null;
-            price_unit?: string | null;
-            symbol?: string | null;
-        };
-        PriceItem: {
-            /** @example 2350.5 */
-            price: string;
-            /** Format: date */
-            priced_on: string;
-        };
-        PriceResponse: {
-            price: string;
-            /** Format: date */
-            priced_on: string;
-            source: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        /**
-         * ProblemDetails
-         * @description RFC 9457 準拠のエラーレスポンス（`application/problem+json`）
-         */
-        ProblemDetails: {
-            /**
-             * @description 人間向けの詳細メッセージ
-             * @example 口座が見つかりません
-             */
-            detail: string;
-            /** @description 項目単位のエラー（422のみ。空の場合はフィールドごと省略される） */
-            errors?: components["schemas"]["FieldError"][];
-            /**
-             * Format: int32
-             * @description HTTPステータスコード
-             * @example 404
-             */
-            status: number;
-            /**
-             * @description エラー種別の短い説明
-             * @example Not Found
-             */
-            title: string;
-            /**
-             * Format: uuid
-             * @description サーバーログと突き合わせるための識別子
-             */
-            trace_id: string;
-            /**
-             * @description エラー種別の安定した識別子。クライアントはこの値で分岐できる
-             * @example /errors/not-found
-             */
-            type: string;
-        };
-        RunReport: {
-            /** Format: int64 */
-            days: number;
-            /** Format: int64 */
-            rows_upserted: number;
-            /** Format: int64 */
-            skipped_users: number;
-            /** Format: int64 */
-            unpriced_rows: number;
-            /** Format: int64 */
-            users: number;
-        };
-        RunRequest: {
-            /**
-             * Format: date
-             * @description 開始日。既定は to の6日前
-             */
-            from?: string | null;
-            /**
-             * Format: date
-             * @description 終了日。既定は当日
-             */
-            to?: string | null;
-            /**
-             * Format: uuid
-             * @description 指定するとそのユーザーだけを対象にする。分割実行・再計算用
-             */
-            user_id?: string | null;
-        };
-        TokenResponse: {
-            access_token: string;
-            /** Format: int64 */
-            expires_in: number;
-            token_type: string;
-        };
-        /**
-         * @description 通貨ごとの合計。
-         *
-         *     `/holdings` は JPY 換算しないため、合計は必ず通貨単位で分ける
-         *     （JPY と USD を足した単一の数値は意味を持たない）。
-         */
-        Totals: {
-            /** @description 全保有の簿価（価格未登録の銘柄も含む）。 */
-            book_value: string;
-            currency: string;
-            /** @description 価格のある銘柄のみの評価額。 */
-            market_value: string;
-            realized_pnl: string;
-            /** @description この通貨のうち、価格が無く評価対象外になった件数。 */
-            unpriced_count: number;
-            unrealized_pnl: string;
-            /** @description `unrealized_pnl ÷ 評価できた分の簿価`。分母が0なら `null`。 */
-            unrealized_pnl_rate?: string | null;
-        };
-        /**
-         * @description 取引種別。
-         * @enum {string}
-         */
-        TradeKind: "buy" | "sell";
-        TransactionResponse: {
-            /** Format: uuid */
-            account_id: string;
-            /** Format: uuid */
-            asset_id: string;
-            /** Format: date-time */
-            created_at: string;
-            /** @example 550 */
-            fee: string;
-            /** Format: uuid */
-            id: string;
-            kind: components["schemas"]["TradeKind"];
-            note?: string | null;
-            /** @example 2350.5 */
-            price: string;
-            /** @example 100 */
-            quantity: string;
-            /** Format: date */
-            traded_at: string;
-        };
-        UpdateAccountRequest: {
-            /** @description 金融機関名。未指定なら変更せず、`null` を明示すると削除する */
-            institution?: string | null;
-            /** @description 口座名。未指定なら変更しない */
-            name?: string | null;
-            /** @description 源泉徴収区分。未指定なら変更せず、`null` を明示すると削除する */
-            withholding?: boolean | null;
-        };
-        UpsertPricesRequest: {
-            /** Format: uuid */
-            asset_id: string;
-            /** @description 1リクエストあたり最大1000件 */
-            prices: components["schemas"]["PriceItem"][];
-            /** @description 価格の出所。未指定なら "manual" */
-            source?: string | null;
-        };
-        UpsertPricesResponse: {
-            /**
-             * Format: int64
-             * @description 登録・更新された件数
-             */
-            upserted: number;
-        };
+  schemas: {
+    AccountResponse: {
+      account_type: components["schemas"]["AccountType"];
+      /** Format: date-time */
+      created_at: string;
+      currency: string;
+      /** Format: uuid */
+      id: string;
+      institution?: string | null;
+      name: string;
+      /** Format: date-time */
+      updated_at: string;
+      withholding?: boolean | null;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    /** @description 口座ごとの内訳。 */
+    AccountSummary: {
+      /** Format: uuid */
+      account_id: string;
+      account_name: string;
+      account_type: components["schemas"]["AccountType"];
+      totals: components["schemas"]["Totals"][];
+    };
+    /** @enum {string} */
+    AccountType:
+      "tokutei" | "ippan" | "nisa_tsumitate" | "nisa_growth" | "ideco" | "bank";
+    /** @description レスポンスの1項目 */
+    AllocationItem: {
+      key: string;
+      label: string;
+      /**
+       * @description 構成比（パーセント）。合計は必ず 100.00 になる
+       * @example 33.34
+       */
+      ratio: string;
+      /** @example 500000 */
+      value_jpy: string;
+    };
+    AllocationResult: {
+      /** Format: date */
+      as_of: string;
+      /** @description 常に "JPY" */
+      base_currency: string;
+      fx_stale: boolean;
+      group_by: components["schemas"]["GroupBy"];
+      items: components["schemas"]["AllocationItem"][];
+      /**
+       * @description 売買のある銘柄の評価額のみが対象。現金・預金残高は含まない。
+       * @example securities_only
+       */
+      scope: string;
+      total_value_jpy: string;
+      /** Format: int64 */
+      unpriced_asset_count: number;
+    };
+    /** @enum {string} */
+    AssetClass: "equity" | "etf" | "mutual_fund" | "bond" | "cash" | "other";
+    AssetResponse: {
+      asset_class: components["schemas"]["AssetClass"];
+      /** Format: date-time */
+      created_at: string;
+      /** @example JPY */
+      currency: string;
+      /** Format: uuid */
+      id: string;
+      /** @example トヨタ自動車 */
+      name: string;
+      /**
+       * @description 価格の単位（投信は10000、それ以外は1）。文字列で表現される
+       * @example 1
+       */
+      price_unit: string;
+      /**
+       * @description ティッカーや証券コード
+       * @example 7203
+       */
+      symbol: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    CreateAccountRequest: {
+      account_type: components["schemas"]["AccountType"];
+      currency?: string;
+      institution?: string | null;
+      name: string;
+      withholding?: boolean | null;
+    };
+    CreateAssetRequest: {
+      asset_class: components["schemas"]["AssetClass"];
+      /**
+       * @description ISO 4217 の3文字。小文字で送っても大文字に正規化される
+       * @example JPY
+       */
+      currency?: string;
+      name: string;
+      /**
+       * @description 未指定なら資産クラスの既定値（投信は10000、他は1）
+       * @example 10000
+       */
+      price_unit?: string | null;
+      symbol: string;
+    };
+    CreateTransaction: {
+      /** Format: uuid */
+      account_id: string;
+      /** Format: uuid */
+      asset_id: string;
+      /**
+       * @description 手数料。0以上。未指定なら0
+       * @example 550
+       */
+      fee?: string;
+      kind: components["schemas"]["TradeKind"];
+      note?: string | null;
+      /**
+       * @description 単価。0以上
+       * @example 2350.5
+       */
+      price: string;
+      /**
+       * @description 数量。正の数
+       * @example 100
+       */
+      quantity: string;
+      /**
+       * Format: date
+       * @description 約定日。未来日は不可（日本時間で判定）
+       */
+      traded_at: string;
+    };
+    /** @description ログイン・登録の認証情報 */
+    Credentials: {
+      /**
+       * @description メールアドレス（大文字小文字は区別しない）
+       * @example user@example.com
+       */
+      email: string;
+      /**
+       * @description パスワード（登録時は12文字以上）
+       * @example correct-horse-battery-staple
+       */
+      password: string;
+    };
+    FieldError: {
+      /**
+       * @description エラーが発生した入力項目名
+       * @example quantity
+       */
+      field: string;
+      /**
+       * @description 項目ごとのエラー内容
+       * @example 数量は正の数である必要があります
+       */
+      message: string;
+    };
+    FxRateResponse: {
+      base: string;
+      /** Format: date-time */
+      fetched_at: string;
+      /** @description 外部APIに到達できずキャッシュで代替した場合 true */
+      is_stale: boolean;
+      quote: string;
+      /** @example 157.23 */
+      rate: string;
+      /**
+       * Format: date
+       * @description 実際にレートが成立した日。要求した `on` と一致するとは限らない
+       */
+      rated_on: string;
+    };
+    /** @enum {string} */
+    Granularity: "day" | "month";
+    /** @enum {string} */
+    GroupBy: "none" | "account_type" | "asset_class" | "account" | "asset";
+    /** @description ヘルスチェックのレスポンス */
+    HealthResponse: {
+      /** @description 常に "ok" */
+      status: string;
+    };
+    HistoryPoint: {
+      /** @example 1000000 */
+      cost_jpy: string;
+      /** Format: date */
+      date: string;
+      /** @example 1234567 */
+      market_value_jpy: string;
+      /**
+       * Format: int64
+       * @description その日、価格または約定日レートが引けず評価から外した銘柄数
+       */
+      unpriced_asset_count: number;
+    };
+    HistoryResult: {
+      /** @description 常に "JPY" */
+      base_currency: string;
+      /** @description 為替の補充中に外部APIへ到達できず、キャッシュでしのいだ */
+      fx_stale: boolean;
+      granularity: components["schemas"]["Granularity"];
+      series: components["schemas"]["HistorySeries"][];
+      source: components["schemas"]["HistorySource"];
+    };
+    HistorySeries: {
+      /** @description 分類軸のキー。group_by=none なら "total"、口座・銘柄軸ではUUID */
+      key: string;
+      /** @description 画面表示用の名前。enum 軸では日本語名、口座・銘柄軸では登録名。 */
+      label: string;
+      points: components["schemas"]["HistoryPoint"][];
+    };
+    /**
+     * @description asset_history の評価結果がどちらの経路から来たか。
+     * @enum {string}
+     */
+    HistorySource: "computed" | "snapshot";
+    /** @description 保有1行。銘柄 × 口座の単位。 */
+    HoldingItem: {
+      /** Format: uuid */
+      account_id: string;
+      account_name: string;
+      account_type: components["schemas"]["AccountType"];
+      asset_class: components["schemas"]["AssetClass"];
+      /** Format: uuid */
+      asset_id: string;
+      avg_cost: string;
+      book_value: string;
+      currency: string;
+      market_value?: string | null;
+      name: string;
+      /** @description 価格が1件も登録されていない銘柄では、以下5つはすべて `null`。 */
+      price?: string | null;
+      price_unit: string;
+      /** Format: date */
+      priced_on?: string | null;
+      /** @example 100 */
+      quantity: string;
+      realized_pnl: string;
+      symbol: string;
+      unrealized_pnl?: string | null;
+      /** @description 評価損益率。小数（0.05 なら +5%） */
+      unrealized_pnl_rate?: string | null;
+    };
+    HoldingsResponse: {
+      holdings: components["schemas"]["HoldingItem"][];
+      summary: components["schemas"]["HoldingsSummary"];
+    };
+    HoldingsSummary: {
+      by_account: components["schemas"]["AccountSummary"][];
+      totals: components["schemas"]["Totals"][];
+      /** @description 全体で価格が無く評価対象外になった件数。 */
+      unpriced_count: number;
+    };
+    /** @description 検証結果。dry-run のレスポンス、および本登録が失敗したときの422ボディ。 */
+    ImportReport: {
+      /** @description 1件でもあれば本登録は全体が失敗する */
+      errors: components["schemas"]["ImportRowError"][];
+      /** @description 挿入対象になる行数 */
+      to_insert: number;
+      /** @description 重複としてスキップされる行数 */
+      to_skip_duplicate: number;
+      total_rows: number;
+    };
+    ImportRequest: {
+      /**
+       * @description CSV本文。ヘッダ行を含む
+       * @example account_id,asset_id,kind,quantity,price,fee,traded_at
+       *     ...
+       */
+      csv_content: string;
+    };
+    /** @description 本登録が成功したときの結果。 */
+    ImportResult: {
+      inserted: number;
+      skipped_duplicate: number;
+    };
+    ImportRowError: {
+      message: string;
+      /** @description CSVの行番号（ヘッダ行を除く1始まり） */
+      row: number;
+    };
+    /** @description 認証済みユーザーの情報 */
+    MeResponse: {
+      /** Format: uuid */
+      user_id: string;
+    };
+    PatchAssetRequest: {
+      name?: string | null;
+      price_unit?: string | null;
+      symbol?: string | null;
+    };
+    PriceItem: {
+      /** @example 2350.5 */
+      price: string;
+      /** Format: date */
+      priced_on: string;
+    };
+    PriceResponse: {
+      price: string;
+      /** Format: date */
+      priced_on: string;
+      source: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    /**
+     * ProblemDetails
+     * @description RFC 9457 準拠のエラーレスポンス（`application/problem+json`）
+     */
+    ProblemDetails: {
+      /**
+       * @description 人間向けの詳細メッセージ
+       * @example 口座が見つかりません
+       */
+      detail: string;
+      /** @description 項目単位のエラー（422のみ。空の場合はフィールドごと省略される） */
+      errors?: components["schemas"]["FieldError"][];
+      /**
+       * Format: int32
+       * @description HTTPステータスコード
+       * @example 404
+       */
+      status: number;
+      /**
+       * @description エラー種別の短い説明
+       * @example Not Found
+       */
+      title: string;
+      /**
+       * Format: uuid
+       * @description サーバーログと突き合わせるための識別子
+       */
+      trace_id: string;
+      /**
+       * @description エラー種別の安定した識別子。クライアントはこの値で分岐できる
+       * @example /errors/not-found
+       */
+      type: string;
+    };
+    RunReport: {
+      /** Format: int64 */
+      days: number;
+      /** Format: int64 */
+      rows_upserted: number;
+      /** Format: int64 */
+      skipped_users: number;
+      /** Format: int64 */
+      unpriced_rows: number;
+      /** Format: int64 */
+      users: number;
+    };
+    RunRequest: {
+      /**
+       * Format: date
+       * @description 開始日。既定は to の6日前
+       */
+      from?: string | null;
+      /**
+       * Format: date
+       * @description 終了日。既定は当日
+       */
+      to?: string | null;
+      /**
+       * Format: uuid
+       * @description 指定するとそのユーザーだけを対象にする。分割実行・再計算用
+       */
+      user_id?: string | null;
+    };
+    TokenResponse: {
+      access_token: string;
+      /** Format: int64 */
+      expires_in: number;
+      token_type: string;
+    };
+    /**
+     * @description 通貨ごとの合計。
+     *
+     *     `/holdings` は JPY 換算しないため、合計は必ず通貨単位で分ける
+     *     （JPY と USD を足した単一の数値は意味を持たない）。
+     */
+    Totals: {
+      /** @description 全保有の簿価（価格未登録の銘柄も含む）。 */
+      book_value: string;
+      currency: string;
+      /** @description 価格のある銘柄のみの評価額。 */
+      market_value: string;
+      realized_pnl: string;
+      /** @description この通貨のうち、価格が無く評価対象外になった件数。 */
+      unpriced_count: number;
+      unrealized_pnl: string;
+      /** @description `unrealized_pnl ÷ 評価できた分の簿価`。分母が0なら `null`。 */
+      unrealized_pnl_rate?: string | null;
+    };
+    /**
+     * @description 取引種別。
+     * @enum {string}
+     */
+    TradeKind: "buy" | "sell";
+    TransactionResponse: {
+      /** Format: uuid */
+      account_id: string;
+      /** Format: uuid */
+      asset_id: string;
+      /** Format: date-time */
+      created_at: string;
+      /** @example 550 */
+      fee: string;
+      /** Format: uuid */
+      id: string;
+      kind: components["schemas"]["TradeKind"];
+      note?: string | null;
+      /** @example 2350.5 */
+      price: string;
+      /** @example 100 */
+      quantity: string;
+      /** Format: date */
+      traded_at: string;
+    };
+    UpdateAccountRequest: {
+      /** @description 金融機関名。未指定なら変更せず、`null` を明示すると削除する */
+      institution?: string | null;
+      /** @description 口座名。未指定なら変更しない */
+      name?: string | null;
+      /** @description 源泉徴収区分。未指定なら変更せず、`null` を明示すると削除する */
+      withholding?: boolean | null;
+    };
+    UpsertPricesRequest: {
+      /** Format: uuid */
+      asset_id: string;
+      /** @description 1リクエストあたり最大1000件 */
+      prices: components["schemas"]["PriceItem"][];
+      /** @description 価格の出所。未指定なら "manual" */
+      source?: string | null;
+    };
+    UpsertPricesResponse: {
+      /**
+       * Format: int64
+       * @description 登録・更新された件数
+       */
+      upserted: number;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 口座の一覧 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountResponse"][];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description 口座の一覧 */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAccountRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["AccountResponse"][];
         };
-        responses: {
-            /** @description 口座を作成した */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 同じ名前の口座が既に存在する */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 通貨コードの形式不正、口座名が空、源泉徴収区分の指定誤りなど */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 口座ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 口座の詳細 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 口座が存在しない、または他ユーザーの口座 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 口座ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除した */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 口座が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 取引が紐づいているため削除できない */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateAccountRequest"];
+      };
     };
-    update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 口座ID */
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description 口座を作成した */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateAccountRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["AccountResponse"];
         };
-        responses: {
-            /** @description 更新後の口座 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountResponse"];
-                };
-            };
-            /** @description 更新する項目が1つも指定されていない */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 口座が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 同じ名前の口座が既に存在する */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 入力値が制約を満たしていない */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 同じ名前の口座が既に存在する */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 通貨コードの形式不正、口座名が空、源泉徴収区分の指定誤りなど */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    allocation: {
-        parameters: {
-            query?: {
-                /** @description 基準日。既定は当日（JST）。未来日は不可 */
-                as_of?: string | null;
-                /** @description 分類軸。既定は asset_class。none は指定できない */
-                group_by?: components["schemas"]["GroupBy"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 指定日時点のアセットアロケーション。ratio の合計は必ず100.00 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllocationResult"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 未来日、group_by=none の指定 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 為替レートを取得できず、キャッシュにも無い */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 口座ID */
+        id: string;
+      };
+      cookie?: never;
     };
-    asset_history: {
-        parameters: {
-            query?: {
-                /** @description 開始日。既定は to の365日前 */
-                from?: string | null;
-                /** @description 終了日。既定は当日（JST）。未来日は不可 */
-                to?: string | null;
-                /** @description 既定は day。期間が2000点を超える場合は month を使う */
-                granularity?: components["schemas"]["Granularity"];
-                /** @description 分類軸。既定は none（全体合計の1系列） */
-                group_by?: components["schemas"]["GroupBy"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description 口座の詳細 */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description 資産評価額の時系列。日次スナップショットが揃っていれば source=snapshot、なければ再計算して source=computed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HistoryResult"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 未来日、from が to より後、期間が2000点を超える */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 為替レートを取得できず、キャッシュにも無い */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["AccountResponse"];
         };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 口座が存在しない、または他ユーザーの口座 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    list_assets: {
-        parameters: {
-            query?: {
-                /** @description シンボルまたは名称の部分一致検索 */
-                q?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 銘柄の一覧 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssetResponse"][];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 口座ID */
+        id: string;
+      };
+      cookie?: never;
     };
-    create_asset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description 削除した */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAssetRequest"];
-            };
+        content?: never;
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
         };
-        responses: {
-            /** @description 銘柄を作成した */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssetResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description このシンボルは既に登録されている */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description シンボル・名称が空、通貨コードの形式不正、価格単位が0以下 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
         };
+      };
+      /** @description 口座が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 取引が紐づいているため削除できない */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    get_asset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 銘柄ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 銘柄の詳細 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssetResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 銘柄が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 口座ID */
+        id: string;
+      };
+      cookie?: never;
     };
-    patch_asset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 銘柄ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PatchAssetRequest"];
-            };
-        };
-        responses: {
-            /** @description 更新後の銘柄 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssetResponse"];
-                };
-            };
-            /** @description 更新する項目が指定されていない */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 銘柄が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description シンボルが他の銘柄と重複 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description シンボル・名称が空、価格単位が0以下 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateAccountRequest"];
+      };
     };
-    login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description 更新後の口座 */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Credentials"];
-            };
+        content: {
+          "application/json": components["schemas"]["AccountResponse"];
         };
-        responses: {
-            /** @description ログイン成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenResponse"];
-                };
-            };
-            /** @description メールアドレスまたはパスワードが違う */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+      };
+      /** @description 更新する項目が1つも指定されていない */
+      400: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 口座が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 同じ名前の口座が既に存在する */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 入力値が制約を満たしていない */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Credentials"];
-            };
-        };
-        responses: {
-            /** @description 登録成功。アクセストークンを返す */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenResponse"];
-                };
-            };
-            /** @description このメールアドレスは既に登録されている */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 入力値が要件を満たしていない */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  allocation: {
+    parameters: {
+      query?: {
+        /** @description 基準日。既定は当日（JST）。未来日は不可 */
+        as_of?: string | null;
+        /** @description 分類軸。既定は asset_class。none は指定できない */
+        group_by?: components["schemas"]["GroupBy"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    get_rate: {
-        parameters: {
-            query: {
-                /**
-                 * @description 変換元の通貨コード（3文字）
-                 * @example USD
-                 */
-                base: string;
-                /**
-                 * @description 変換先の通貨コード（3文字）
-                 * @example JPY
-                 */
-                quote: string;
-                /** @description 省略時は今日 */
-                on?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description 指定日時点のアセットアロケーション。ratio の合計は必ず100.00 */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description 為替レート。外部APIに到達できない場合はキャッシュを返し is_stale=true になる */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxRateResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 通貨コードの形式不正、未来日、対応していない通貨ペア */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 外部APIに到達できず、キャッシュも古すぎる */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["AllocationResult"];
         };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 未来日、group_by=none の指定 */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 為替レートを取得できず、キャッシュにも無い */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    health: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description サービス稼働中 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponse"];
-                };
-            };
-        };
+  };
+  asset_history: {
+    parameters: {
+      query?: {
+        /** @description 開始日。既定は to の365日前 */
+        from?: string | null;
+        /** @description 終了日。既定は当日（JST）。未来日は不可 */
+        to?: string | null;
+        /** @description 既定は day。期間が2000点を超える場合は month を使う */
+        granularity?: components["schemas"]["Granularity"];
+        /** @description 分類軸。既定は none（全体合計の1系列） */
+        group_by?: components["schemas"]["GroupBy"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    list: {
-        parameters: {
-            query?: {
-                /** @description 指定した口座のみに絞る。他人の・存在しない口座は 404。 */
-                account_id?: string | null;
-                /** @description `true` で全売却済み（数量0）のポジションも返す。実現損益の集計用。 */
-                include_closed?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description 資産評価額の時系列。日次スナップショットが揃っていれば source=snapshot、なければ再計算して source=computed */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description 保有ポジションと通貨別・口座別の集計 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HoldingsResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 指定した口座が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["HistoryResult"];
         };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 未来日、from が to より後、期間が2000点を超える */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 為替レートを取得できず、キャッシュにも無い */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportRequest"];
-            };
-        };
-        responses: {
-            /** @description 全行の取込に成功した */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImportResult"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 検証エラー。1件でもあれば何も挿入されない。ボディは ProblemDetails ではなく ImportReport */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImportReport"];
-                };
-            };
-        };
+  };
+  list_assets: {
+    parameters: {
+      query?: {
+        /** @description シンボルまたは名称の部分一致検索 */
+        q?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    dry_run: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description 銘柄の一覧 */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["AssetResponse"][];
         };
-        responses: {
-            /** @description 検証結果。DBには何も書き込まれない。errors が空でなければ本登録は失敗する */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImportReport"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 認証済みユーザーの情報 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MeResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  create_asset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    upsert_prices: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpsertPricesRequest"];
-            };
-        };
-        responses: {
-            /** @description 登録・更新した件数 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UpsertPricesResponse"];
-                };
-            };
-            /** @description prices が空 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 銘柄が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 件数超過、未来日、価格が負 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateAssetRequest"];
+      };
     };
-    get_price_history: {
-        parameters: {
-            query?: {
-                /** @description 開始日（含む） */
-                from?: string | null;
-                /** @description 終了日（含む） */
-                to?: string | null;
-            };
-            header?: never;
-            path: {
-                /** @description 銘柄ID */
-                asset_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description 銘柄を作成した */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description 価格履歴（日付の昇順） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PriceResponse"][];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 銘柄が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["AssetResponse"];
         };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description このシンボルは既に登録されている */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description シンボル・名称が空、通貨コードの形式不正、価格単位が0以下 */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    run: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description 省略可。ボディなしなら直近7日分を全ユーザーで実行 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RunRequest"];
-            };
-        };
-        responses: {
-            /** @description バッチ実行の結果 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RunReport"];
-                };
-            };
-            /** @description from が to より後 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description バッチトークンが不正 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  get_asset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 銘柄ID */
+        id: string;
+      };
+      cookie?: never;
     };
-    list: {
-        parameters: {
-            query?: {
-                /** @description 口座で絞り込む */
-                account_id?: string | null;
-                /** @description 銘柄で絞り込む */
-                asset_id?: string | null;
-                /** @description 約定日の開始（含む） */
-                from?: string | null;
-                /** @description 約定日の終了（含む） */
-                to?: string | null;
-                /** @description 取得件数。既定100、最大500に丸められる */
-                limit?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description 銘柄の詳細 */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description 取引の一覧（約定日の降順） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponse"][];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 開始日が終了日より後 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["AssetResponse"];
         };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 銘柄が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
-    create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateTransaction"];
-            };
-        };
-        responses: {
-            /** @description 取引を登録した */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 口座または銘柄が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 数量が0以下、価格や手数料が負、未来日、売却が保有数量を超える */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+  };
+  patch_asset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 銘柄ID */
+        id: string;
+      };
+      cookie?: never;
     };
-    show: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 取引ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取引の詳細 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponse"];
-                };
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 取引が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PatchAssetRequest"];
+      };
     };
-    delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 取引ID */
-                id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description 更新後の銘柄 */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description 削除した */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 認証が必要 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 取引または銘柄が存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description 削除すると以降の売却が保有数量を超える */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemDetails"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["AssetResponse"];
         };
+      };
+      /** @description 更新する項目が指定されていない */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 銘柄が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description シンボルが他の銘柄と重複 */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description シンボル・名称が空、価格単位が0以下 */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
     };
+  };
+  login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Credentials"];
+      };
+    };
+    responses: {
+      /** @description ログイン成功 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TokenResponse"];
+        };
+      };
+      /** @description メールアドレスまたはパスワードが違う */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  register: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Credentials"];
+      };
+    };
+    responses: {
+      /** @description 登録成功。アクセストークンを返す */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TokenResponse"];
+        };
+      };
+      /** @description このメールアドレスは既に登録されている */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 入力値が要件を満たしていない */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  get_rate: {
+    parameters: {
+      query: {
+        /**
+         * @description 変換元の通貨コード（3文字）
+         * @example USD
+         */
+        base: string;
+        /**
+         * @description 変換先の通貨コード（3文字）
+         * @example JPY
+         */
+        quote: string;
+        /** @description 省略時は今日 */
+        on?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 為替レート。外部APIに到達できない場合はキャッシュを返し is_stale=true になる */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FxRateResponse"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 通貨コードの形式不正、未来日、対応していない通貨ペア */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 外部APIに到達できず、キャッシュも古すぎる */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  health: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description サービス稼働中 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HealthResponse"];
+        };
+      };
+    };
+  };
+  list: {
+    parameters: {
+      query?: {
+        /** @description 指定した口座のみに絞る。他人の・存在しない口座は 404。 */
+        account_id?: string | null;
+        /** @description `true` で全売却済み（数量0）のポジションも返す。実現損益の集計用。 */
+        include_closed?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 保有ポジションと通貨別・口座別の集計 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HoldingsResponse"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 指定した口座が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ImportRequest"];
+      };
+    };
+    responses: {
+      /** @description 全行の取込に成功した */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ImportResult"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 検証エラー。1件でもあれば何も挿入されない。ボディは ProblemDetails ではなく ImportReport */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ImportReport"];
+        };
+      };
+    };
+  };
+  dry_run: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ImportRequest"];
+      };
+    };
+    responses: {
+      /** @description 検証結果。DBには何も書き込まれない。errors が空でなければ本登録は失敗する */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ImportReport"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  me: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 認証済みユーザーの情報 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MeResponse"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  upsert_prices: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpsertPricesRequest"];
+      };
+    };
+    responses: {
+      /** @description 登録・更新した件数 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpsertPricesResponse"];
+        };
+      };
+      /** @description prices が空 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 銘柄が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 件数超過、未来日、価格が負 */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  get_price_history: {
+    parameters: {
+      query?: {
+        /** @description 開始日（含む） */
+        from?: string | null;
+        /** @description 終了日（含む） */
+        to?: string | null;
+      };
+      header?: never;
+      path: {
+        /** @description 銘柄ID */
+        asset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 価格履歴（日付の昇順） */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PriceResponse"][];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 銘柄が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  run: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 省略可。ボディなしなら直近7日分を全ユーザーで実行 */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RunRequest"];
+      };
+    };
+    responses: {
+      /** @description バッチ実行の結果 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RunReport"];
+        };
+      };
+      /** @description from が to より後 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description バッチトークンが不正 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  list: {
+    parameters: {
+      query?: {
+        /** @description 口座で絞り込む */
+        account_id?: string | null;
+        /** @description 銘柄で絞り込む */
+        asset_id?: string | null;
+        /** @description 約定日の開始（含む） */
+        from?: string | null;
+        /** @description 約定日の終了（含む） */
+        to?: string | null;
+        /** @description 取得件数。既定100、最大500に丸められる */
+        limit?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 取引の一覧（約定日の降順） */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TransactionResponse"][];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 開始日が終了日より後 */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateTransaction"];
+      };
+    };
+    responses: {
+      /** @description 取引を登録した */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TransactionResponse"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 口座または銘柄が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 数量が0以下、価格や手数料が負、未来日、売却が保有数量を超える */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  show: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 取引ID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 取引の詳細 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TransactionResponse"];
+        };
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 取引が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 取引ID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 削除した */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 認証が必要 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 取引または銘柄が存在しない */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description 削除すると以降の売却が保有数量を超える */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
 }
