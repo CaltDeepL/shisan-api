@@ -94,19 +94,23 @@ pub async fn upsert_prices(
     // 空配列を先に弾く。後回しにすると rows_affected == 0 が
     // 「銘柄が存在しない」と区別できなくなる。
     if req.prices.is_empty() {
-        return Err(AppError::BadRequest("prices must not be empty".to_string()));
+        return Err(AppError::BadRequest(
+            "価格を1件以上指定してください".to_string(),
+        ));
     }
     if req.prices.len() > MAX_PRICES_PER_REQUEST {
-        return Err(AppError::unprocessable("too many prices in one request"));
+        return Err(AppError::unprocessable(
+            "1リクエストあたり最大1000件までです".to_string(),
+        ));
     }
 
     let today = Utc::now().date_naive();
     for p in &req.prices {
         if p.priced_on > today {
-            return Err(AppError::field("priced_on", "must not be in the future"));
+            return Err(AppError::field("priced_on", "未来の日付は指定できません"));
         }
         if p.price < Decimal::ZERO {
-            return Err(AppError::field("price", "must not be negative"));
+            return Err(AppError::field("price", "0以上の値を指定してください"));
         }
     }
 

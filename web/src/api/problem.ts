@@ -1,15 +1,7 @@
-export type FieldError = { field: string; message: string };
+import type { components } from "./schema";
 
-export type ProblemDetails = {
-  /** サーバーからの実レスポンス以外（通信エラー・本文なし等）では省略される */
-  type?: string;
-  title: string;
-  status?: number;
-  detail?: string;
-  /** 空のときはサーバー側で省略される */
-  errors?: FieldError[];
-  trace_id?: string;
-};
+export type FieldError = components["schemas"]["FieldError"];
+export type ProblemDetails = Partial<components["schemas"]["ProblemDetails"]>;
 
 /** API が返したエラーを表す例外。status 0 はネットワーク到達不能。 */
 export class ApiError extends Error {

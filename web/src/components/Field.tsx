@@ -7,6 +7,7 @@ type Props = {
   error?: string;
   autoComplete?: string;
   hint?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 };
 
 export function Field({
@@ -18,6 +19,7 @@ export function Field({
   error,
   autoComplete,
   hint,
+  inputMode,
 }: Props) {
   const errorId = `${name}-error`;
   const hintId = `${name}-hint`;
@@ -37,6 +39,7 @@ export function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
+        inputMode={inputMode}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         className={`w-full rounded-md border px-3 py-2 text-slate-900 outline-none focus:ring-2 ${

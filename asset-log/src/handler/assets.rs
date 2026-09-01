@@ -75,7 +75,9 @@ fn normalize_currency(input: &str) -> Result<String, AppError> {
     if c.len() == 3 && c.chars().all(|ch| ch.is_ascii_uppercase()) {
         Ok(c)
     } else {
-        Err(AppError::unprocessable("currency must be a 3-letter code"))
+        Err(AppError::unprocessable(
+            "通貨コードは3文字で指定してください",
+        ))
     }
 }
 #[utoipa::path(
@@ -97,14 +99,16 @@ pub async fn create_asset(
     let symbol = req.symbol.trim().to_string();
     let name = req.name.trim().to_string();
     if symbol.is_empty() || name.is_empty() {
-        return Err(AppError::unprocessable("symbol and name must not be blank"));
+        return Err(AppError::unprocessable("コードと名称は必須です"));
     }
 
     let price_unit = req
         .price_unit
         .unwrap_or_else(|| req.asset_class.default_price_unit());
     if price_unit <= Decimal::ZERO {
-        return Err(AppError::unprocessable("price_unit must be positive"));
+        return Err(AppError::unprocessable(
+            "価格単位は正の数で指定してください",
+        ));
     }
 
     let input = NewAsset {
@@ -192,14 +196,14 @@ pub async fn patch_asset(
     Json(req): Json<PatchAssetRequest>,
 ) -> Result<Json<AssetResponse>, AppError> {
     if req.symbol.is_none() && req.name.is_none() && req.price_unit.is_none() {
-        return Err(AppError::BadRequest("no fields to update".to_string()));
+        return Err(AppError::BadRequest("更新する項目がありません".to_string()));
     }
 
     let symbol = match req.symbol {
         Some(s) => {
             let s = s.trim().to_string();
             if s.is_empty() {
-                return Err(AppError::field("symbol", "must not be blank"));
+                return Err(AppError::field("symbol", "必須項目です"));
             }
             Some(s)
         }
@@ -210,7 +214,7 @@ pub async fn patch_asset(
         Some(s) => {
             let s = s.trim().to_string();
             if s.is_empty() {
-                return Err(AppError::field("name", "must not be blank"));
+                return Err(AppError::field("name", "必須項目です"));
             }
             Some(s)
         }
@@ -220,7 +224,7 @@ pub async fn patch_asset(
     if let Some(u) = req.price_unit
         && u <= Decimal::ZERO
     {
-        return Err(AppError::field("price_unit", "must be positive"));
+        return Err(AppError::field("price_unit", "正の数を指定してください"));
     }
 
     let patch = AssetPatch {
