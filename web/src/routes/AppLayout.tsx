@@ -7,6 +7,7 @@ const navItems = [
   { to: "/holdings", label: "保有一覧" },
   { to: "/transactions", label: "取引" },
   { to: "/assets", label: "銘柄" },
+  { to: "/analytics", label: "分析" },
 ];
 
 export function AppLayout() {
