@@ -12,7 +12,7 @@ const isClientError = (error: unknown) =>
   error instanceof ApiError && error.status >= 400 && error.status < 500;
 
 export const assetHistoryKey = (query: AssetHistoryQuery) =>
-  ["asset-history", query] as const;
+  ["analytics", "asset-history", query] as const;
 
 export function useAssetHistory(query: AssetHistoryQuery) {
   return useQuery({
@@ -26,7 +26,7 @@ export function useAssetHistory(query: AssetHistoryQuery) {
 }
 
 export const allocationKey = (query: AllocationQuery) =>
-  ["allocation", query] as const;
+  ["analytics", "allocation", query] as const;
 
 export function useAllocation(query: AllocationQuery) {
   return useQuery({
