@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/auth";
 const navItems = [
   { to: "/", label: "ダッシュボード", end: true },
   { to: "/accounts", label: "口座" },
+  { to: "/holdings", label: "保有一覧" },
   { to: "/transactions", label: "取引" },
   { to: "/assets", label: "銘柄" },
 ];
