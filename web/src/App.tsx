@@ -12,6 +12,7 @@ import { HoldingsPage } from "@/features/holdings/HoldingsPage";
 import { AssetsPage } from "@/features/assets/AssetsPage";
 import { TransactionsPage } from "@/features/transactions/TransactionsPage";
 import { AnalyticsPage } from "@/features/analytics/AnalyticsPage";
+import { ImportPage } from "@/features/import/ImportPage";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/assets" element={<AssetsPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/import" element={<ImportPage />} />
             </Route>
           </Route>
 
