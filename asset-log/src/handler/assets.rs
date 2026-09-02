@@ -81,7 +81,7 @@ fn normalize_currency(input: &str) -> Result<String, AppError> {
     }
 }
 #[utoipa::path(
-    post, path = "/assets", tag = "assets",
+    post, path = "/assets", operation_id = "create_asset", tag = "assets",
     security(("bearerAuth" = [])),
     request_body = CreateAssetRequest,
     responses(
@@ -129,7 +129,7 @@ pub struct ListAssetsQuery {
     pub q: Option<String>,
 }
 #[utoipa::path(
-    get, path = "/assets", tag = "assets",
+    get, path = "/assets", operation_id = "list_assets", tag = "assets",
     security(("bearerAuth" = [])),
     params(ListAssetsQuery),
     responses(
@@ -147,7 +147,7 @@ pub async fn list_assets(
     Ok(Json(assets.into_iter().map(Into::into).collect()))
 }
 #[utoipa::path(
-    get, path = "/assets/{id}", tag = "assets",
+    get, path = "/assets/{id}", operation_id = "get_asset", tag = "assets",
     security(("bearerAuth" = [])),
     params(("id" = Uuid, Path, description = "銘柄ID")),
     responses(
@@ -176,7 +176,7 @@ pub struct PatchAssetRequest {
     pub price_unit: Option<Decimal>,
 }
 #[utoipa::path(
-    patch, path = "/assets/{id}", tag = "assets",
+    patch, path = "/assets/{id}", operation_id = "update_asset", tag = "assets",
     security(("bearerAuth" = [])),
     params(("id" = Uuid, Path, description = "銘柄ID")),
     request_body = PatchAssetRequest,

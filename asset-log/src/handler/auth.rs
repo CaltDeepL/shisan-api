@@ -69,6 +69,7 @@ fn validate(c: &Credentials) -> Result<String, AppError> {
 #[utoipa::path(
     post,
     path = "/auth/register",
+    operation_id = "register",
     tag = "auth",
     request_body = Credentials,
     responses(
@@ -99,6 +100,7 @@ pub async fn register(
 #[utoipa::path(
     post,
     path = "/auth/login",
+    operation_id = "login",
     tag = "auth",
     request_body = Credentials,
     responses(
@@ -134,6 +136,7 @@ pub async fn login(
 #[utoipa::path(
     get,
     path = "/me",
+    operation_id = "me",
     tag = "auth",
     security(("bearerAuth" = [])),
     responses(

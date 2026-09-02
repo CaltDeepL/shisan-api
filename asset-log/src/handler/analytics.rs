@@ -40,7 +40,7 @@ fn default_group_by() -> GroupBy {
     GroupBy::None
 }
 #[utoipa::path(
-    get, path = "/analytics/asset-history", tag = "analytics",
+    get, path = "/analytics/asset-history", operation_id = "get_asset_history", tag = "analytics",
     security(("bearerAuth" = [])),
     params(HistoryQuery),
     responses(
@@ -102,7 +102,7 @@ fn default_allocation_group_by() -> GroupBy {
     GroupBy::AssetClass
 }
 #[utoipa::path(
-    get, path = "/analytics/allocation", tag = "analytics",
+    get, path = "/analytics/allocation", operation_id = "get_allocation", tag = "analytics",
     security(("bearerAuth" = [])),
     params(AllocationQuery),
     responses(

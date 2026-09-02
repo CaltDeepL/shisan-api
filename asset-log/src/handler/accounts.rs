@@ -88,6 +88,7 @@ impl From<Account> for AccountResponse {
 #[utoipa::path(
     post,
     path = "/accounts",
+    operation_id = "create_account",
     tag = "accounts",
     security(("bearerAuth" = [])),
     request_body = CreateAccountRequest,
@@ -117,6 +118,7 @@ pub async fn create(
 #[utoipa::path(
     get,
     path = "/accounts",
+    operation_id = "list_accounts",
     tag = "accounts",
     security(("bearerAuth" = [])),
     responses(
@@ -134,6 +136,7 @@ pub async fn list(
 #[utoipa::path(
     get,
     path = "/accounts/{id}",
+    operation_id = "get_account",
     tag = "accounts",
     security(("bearerAuth" = [])),
     params(("id" = Uuid, Path, description = "口座ID")),
@@ -156,6 +159,7 @@ pub async fn get(
 #[utoipa::path(
     patch,
     path = "/accounts/{id}",
+    operation_id = "update_account",
     tag = "accounts",
     security(("bearerAuth" = [])),
     params(("id" = Uuid, Path, description = "口座ID")),
@@ -196,6 +200,7 @@ pub async fn update(
 #[utoipa::path(
     delete,
     path = "/accounts/{id}",
+    operation_id = "delete_account",
     tag = "accounts",
     security(("bearerAuth" = [])),
     params(("id" = Uuid, Path, description = "口座ID")),

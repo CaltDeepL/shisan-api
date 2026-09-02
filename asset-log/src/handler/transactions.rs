@@ -104,7 +104,7 @@ impl From<Transaction> for TransactionResponse {
     }
 }
 #[utoipa::path(
-    post, path = "/transactions", tag = "transactions",
+    post, path = "/transactions", operation_id = "create_transaction", tag = "transactions",
     security(("bearerAuth" = [])),
     request_body = CreateTransaction,
     responses(
@@ -170,7 +170,7 @@ pub async fn create(
     Ok((StatusCode::CREATED, Json(created.into())))
 }
 #[utoipa::path(
-    get, path = "/transactions", tag = "transactions",
+    get, path = "/transactions", operation_id = "list_transactions", tag = "transactions",
     security(("bearerAuth" = [])),
     params(ListQuery),
     responses(
@@ -206,7 +206,7 @@ pub async fn list(
     Ok(Json(rows.into_iter().map(Into::into).collect()))
 }
 #[utoipa::path(
-    get, path = "/transactions/{id}", tag = "transactions",
+    get, path = "/transactions/{id}", operation_id = "get_transaction", tag = "transactions",
     security(("bearerAuth" = [])),
     params(("id" = Uuid, Path, description = "取引ID")),
     responses(
@@ -226,7 +226,7 @@ pub async fn show(
     Ok(Json(found.into()))
 }
 #[utoipa::path(
-    delete, path = "/transactions/{id}", tag = "transactions",
+    delete, path = "/transactions/{id}", operation_id = "delete_transaction", tag = "transactions",
     security(("bearerAuth" = [])),
     params(("id" = Uuid, Path, description = "取引ID")),
     responses(

@@ -1159,7 +1159,7 @@
   "paths": {
     "/accounts": {
       "get": {
-        "operationId": "list",
+        "operationId": "list_accounts",
         "responses": {
           "200": {
             "content": {
@@ -1195,7 +1195,7 @@
         ]
       },
       "post": {
-        "operationId": "create",
+        "operationId": "create_account",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1260,7 +1260,7 @@
     },
     "/accounts/{id}": {
       "delete": {
-        "operationId": "delete",
+        "operationId": "delete_account",
         "parameters": [
           {
             "description": "口座ID",
@@ -1318,7 +1318,7 @@
         ]
       },
       "get": {
-        "operationId": "get",
+        "operationId": "get_account",
         "parameters": [
           {
             "description": "口座ID",
@@ -1373,7 +1373,7 @@
         ]
       },
       "patch": {
-        "operationId": "update",
+        "operationId": "update_account",
         "parameters": [
           {
             "description": "口座ID",
@@ -1470,7 +1470,7 @@
     },
     "/analytics/allocation": {
       "get": {
-        "operationId": "allocation",
+        "operationId": "get_allocation",
         "parameters": [
           {
             "description": "基準日。既定は当日（JST）。未来日は不可",
@@ -1549,7 +1549,7 @@
     },
     "/analytics/asset-history": {
       "get": {
-        "operationId": "asset_history",
+        "operationId": "get_asset_history",
         "parameters": [
           {
             "description": "開始日。既定は to の365日前",
@@ -1820,7 +1820,7 @@
         ]
       },
       "patch": {
-        "operationId": "patch_asset",
+        "operationId": "update_asset",
         "parameters": [
           {
             "description": "銘柄ID",
@@ -2117,8 +2117,8 @@
     },
     "/holdings": {
       "get": {
-        "description": "- `account_id`: 省略時は全口座。他人の・存在しない口座は 404\n- `include_closed`: 既定 `false`。`true` で全売却済み（数量0）のポジションも含める\n- `include_unpriced`: 既定 `false`。`true` で価格が無く評価対象外になったポジションも含める\n- `include_zero`: 既定 `false`。`true` で数量0のポジションも含める",
-        "operationId": "list",
+        "description": "- `account_id`: 省略時は全口座。他人の・存在しない口座は 404\n- `include_closed`: 既定 `false`。`true` で全売却済み（数量0）のポジションも含める\n\n`holdings` の並び順は口座名昇順 → 同一口座内はシンボル昇順。",
+        "operationId": "list_holdings",
         "parameters": [
           {
             "description": "指定した口座のみに絞る。他人の・存在しない口座は 404。",
@@ -2188,7 +2188,7 @@
     },
     "/import/transactions": {
       "post": {
-        "operationId": "create",
+        "operationId": "import_transactions",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2243,7 +2243,7 @@
     },
     "/import/transactions/dry-run": {
       "post": {
-        "operationId": "dry_run",
+        "operationId": "import_transactions_dry_run",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2485,7 +2485,7 @@
     },
     "/snapshots/run": {
       "post": {
-        "operationId": "run",
+        "operationId": "run_snapshots",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2542,7 +2542,7 @@
     },
     "/transactions": {
       "get": {
-        "operationId": "list",
+        "operationId": "list_transactions",
         "parameters": [
           {
             "description": "口座で絞り込む",
@@ -2655,7 +2655,7 @@
         ]
       },
       "post": {
-        "operationId": "create",
+        "operationId": "create_transaction",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2720,7 +2720,7 @@
     },
     "/transactions/{id}": {
       "delete": {
-        "operationId": "delete",
+        "operationId": "delete_transaction",
         "parameters": [
           {
             "description": "取引ID",
@@ -2778,7 +2778,7 @@
         ]
       },
       "get": {
-        "operationId": "show",
+        "operationId": "get_transaction",
         "parameters": [
           {
             "description": "取引ID",

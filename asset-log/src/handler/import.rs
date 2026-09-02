@@ -19,7 +19,7 @@ pub struct ImportRequest {
     pub csv_content: String,
 }
 #[utoipa::path(
-    post, path = "/import/transactions/dry-run", tag = "import",
+    post, path = "/import/transactions/dry-run", operation_id = "import_transactions_dry_run", tag = "import",
     security(("bearerAuth" = [])),
     request_body = ImportRequest,
     responses(
@@ -36,7 +36,7 @@ pub async fn dry_run(
     Ok(Json(report))
 }
 #[utoipa::path(
-    post, path = "/import/transactions", tag = "import",
+    post, path = "/import/transactions", operation_id = "import_transactions", tag = "import",
     security(("bearerAuth" = [])),
     request_body = ImportRequest,
     responses(

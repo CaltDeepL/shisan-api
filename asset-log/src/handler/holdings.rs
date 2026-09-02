@@ -19,11 +19,10 @@ use crate::state::AppState;
 ///
 /// - `account_id`: 省略時は全口座。他人の・存在しない口座は 404
 /// - `include_closed`: 既定 `false`。`true` で全売却済み（数量0）のポジションも含める
-/// - `include_unpriced`: 既定 `false`。`true` で価格が無く評価対象外になったポジションも含める
-/// - `include_zero`: 既定 `false`。`true` で数量0のポジションも含める
+/// `holdings` の並び順は口座名昇順 → 同一口座内はシンボル昇順。
 
 #[utoipa::path(
-    get, path = "/holdings", tag = "holdings",
+    get, path = "/holdings", operation_id = "list_holdings", tag = "holdings",
     security(("bearerAuth" = [])),
     params(HoldingsQuery),
     responses(

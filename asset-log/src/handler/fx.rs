@@ -38,7 +38,7 @@ pub struct FxRateResponse {
 }
 
 #[utoipa::path(
-    get, path = "/fx/rates", tag = "fx",
+    get, path = "/fx/rates", operation_id = "get_rate", tag = "fx",
     security(("bearerAuth" = [])),
     params(FxQuery),
     responses(

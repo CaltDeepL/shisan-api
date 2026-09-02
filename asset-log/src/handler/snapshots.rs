@@ -22,7 +22,7 @@ pub struct RunRequest {
     pub user_id: Option<Uuid>,
 }
 #[utoipa::path(
-    post, path = "/snapshots/run", tag = "snapshots",
+    post, path = "/snapshots/run", operation_id = "run_snapshots", tag = "snapshots",
     security(("jobToken" = [])),
     request_body(content = RunRequest, description = "省略可。ボディなしなら直近7日分を全ユーザーで実行"),
     responses(

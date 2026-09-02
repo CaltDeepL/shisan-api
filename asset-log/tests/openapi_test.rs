@@ -122,6 +122,35 @@ async fn decimal_fields_are_strings(db: PgPool) {
     );
 }
 
+/// operation_id の付け忘れ・重複を検知する。
+/// utoipa は明示しないと Rust の関数名をそのまま operationId にするため、
+/// 別ハンドラで同じ関数名（list / create など）を使うと黙って衝突する。
+#[sqlx::test]
+async fn operation_ids_are_unique(db: PgPool) {
+    let app = test_app(db);
+    let (_, spec) = request(&app, Method::GET, "/openapi.json", None, None).await;
+
+    let paths = spec["paths"].as_object().expect("paths");
+    let mut ids = Vec::new();
+    for (path, item) in paths {
+        for (method, op) in item.as_object().expect("path item") {
+            let id = op["operationId"]
+                .as_str()
+                .unwrap_or_else(|| panic!("{method} {path} に operation_id がありません"));
+            ids.push(format!("{id} ({method} {path})"));
+        }
+    }
+
+    let mut names: Vec<&str> = ids
+        .iter()
+        .map(|s| s.split(' ').next().expect("id"))
+        .collect();
+    let total = names.len();
+    names.sort();
+    names.dedup();
+    assert_eq!(names.len(), total, "operation_id が重複しています: {ids:?}");
+}
+
 #[sqlx::test]
 async fn swagger_ui_is_served(db: PgPool) {
     let app = test_app(db);

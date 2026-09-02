@@ -75,7 +75,7 @@ impl From<AssetPrice> for PriceResponse {
     }
 }
 #[utoipa::path(
-    post, path = "/prices", tag = "assets",
+    post, path = "/prices", operation_id = "upsert_prices", tag = "assets",
     security(("bearerAuth" = [])),
     request_body = UpsertPricesRequest,
     responses(
@@ -133,7 +133,7 @@ pub async fn upsert_prices(
     Ok(Json(UpsertPricesResponse { upserted }))
 }
 #[utoipa::path(
-    get, path = "/prices/{asset_id}", tag = "assets",
+    get, path = "/prices/{asset_id}", operation_id = "get_price_history", tag = "assets",
     security(("bearerAuth" = [])),
     params(
         ("asset_id" = Uuid, Path, description = "銘柄ID"),
