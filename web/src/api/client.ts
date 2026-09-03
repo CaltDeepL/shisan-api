@@ -1,7 +1,7 @@
 import { ApiError, type ProblemDetails } from "./problem";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
-
+if (!BASE) throw new Error("VITE_API_BASE_URL が未設定のままビルドされています");
 /** トークンの取得口。store を直接 import すると循環参照になるため注入する。 */
 let getToken: () => string | null = () => null;
 export function setTokenProvider(fn: () => string | null) {
