@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "@/api/problem";
+import { DialogShell } from "@/components/DialogShell";
 import { FormError } from "@/components/FormError";
 import type { Transaction } from "@/api/transactions";
 import { useDeleteTransaction } from "./queries";
@@ -35,12 +36,7 @@ export function DeleteTransactionDialog({ transaction, label, onClose }: Props) 
   }
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={onClose}
-      onClose={onClose}
-      className="w-full max-w-md rounded-lg p-0 backdrop:bg-slate-900/40"
-    >
+    <DialogShell dialogRef={ref} onClose={onClose}>
       <div className="space-y-4 p-6">
         <h2 className="text-lg font-semibold text-slate-900">取引を削除</h2>
         <p className="text-sm text-slate-700">{label}</p>
@@ -70,6 +66,6 @@ export function DeleteTransactionDialog({ transaction, label, onClose }: Props) 
           </button>
         </div>
       </div>
-    </dialog>
+    </DialogShell>
   );
 }

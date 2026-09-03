@@ -3,6 +3,9 @@ import type {
   AllocationResult,
   HistoryResult,
 } from "@/api/analytics";
+import { toNumber } from "@/lib/format";
+
+export { formatPercent, formatYen, toNumber } from "@/lib/format";
 
 /* ---------------- 期間プリセット ---------------- */
 
@@ -48,29 +51,6 @@ export function resolveGranularity(preset: PeriodPreset): "day" | "month" {
 }
 
 /* ---------------- 数値・書式 ---------------- */
-
-/** Decimalは文字列で来るので、API境界でここだけ通す */
-export function toNumber(v: string | number | null | undefined): number | null {
-  if (v === null || v === undefined) return null;
-  const n = typeof v === "number" ? v : Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-export function formatYen(v: string | number | null | undefined): string {
-  const n = toNumber(v);
-  if (n === null) return "—";
-  return `¥${Math.round(n).toLocaleString("ja-JP")}`;
-}
-
-/**
- * allocation の ratio は既にパーセント（合計100.00）なので100倍しない。
- * #21 の formatRatioAsPercent（比率0〜1を100倍する）とは別物なので名前で分ける。
- */
-export function formatPercent(v: string | number | null | undefined): string {
-  const n = toNumber(v);
-  if (n === null) return "—";
-  return `${n.toFixed(2)}%`;
-}
 
 export function formatAxisDate(date: string, granularity: "day" | "month"): string {
   const [y, m, d] = date.split("-");

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "@/api/problem";
+import { DialogShell } from "@/components/DialogShell";
 import { Field } from "@/components/Field";
 import { FormError } from "@/components/FormError";
 import type { Account } from "@/api/accounts";
@@ -78,12 +79,7 @@ export function CreateTransactionDialog({
   }
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={onClose}
-      onClose={onClose}
-      className="w-full max-w-md rounded-lg p-0 backdrop:bg-slate-900/40"
-    >
+    <DialogShell dialogRef={ref} onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate className="space-y-4 p-6">
         <h2 className="text-lg font-semibold text-slate-900">取引を追加</h2>
 
@@ -218,6 +214,6 @@ export function CreateTransactionDialog({
           </button>
         </div>
       </form>
-    </dialog>
+    </DialogShell>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "@/api/problem";
+import { DialogShell } from "@/components/DialogShell";
 import { Field } from "@/components/Field";
 import { FormError } from "@/components/FormError";
 import { buildCreateAsset, type AssetClass } from "@/api/assets";
@@ -61,12 +62,7 @@ export function CreateAssetDialog({ open, onClose }: Props) {
   }
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={onClose}
-      onClose={onClose}
-      className="w-full max-w-md rounded-lg p-0 backdrop:bg-slate-900/40"
-    >
+    <DialogShell dialogRef={ref} onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate className="space-y-4 p-6">
         <h2 className="text-lg font-semibold text-slate-900">銘柄を追加</h2>
 
@@ -172,6 +168,6 @@ export function CreateAssetDialog({ open, onClose }: Props) {
           </button>
         </div>
       </form>
-    </dialog>
+    </DialogShell>
   );
 }
