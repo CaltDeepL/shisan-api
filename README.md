@@ -8,9 +8,6 @@
 
 **デモ**: https://shisan-api.onrender.com/docs
 
-<!-- TODO: Swagger UI のスクリーンショットを配置
-![Swagger UI](docs/images/swagger-overview.png)
--->
 
 Swagger UI からブラウザ上で全エンドポイントを試せます。`POST /auth/register` でアカウントを作成し、返却されたトークンを右上の **Authorize** に入力してください。
 
@@ -90,6 +87,15 @@ shisan-api/
 ├── .env                      # Compose 用の環境変数（gitignore 対象）
 ├── .github/workflows/        # CI / Deploy / Daily Snapshot
 ├── web/                      # フロントエンド（Vite + React + TypeScript）
+│   ├── .node-version         # Node のバージョン（ローカル / CI / Render で共有）
+│   └── src/
+│       ├── api/              # fetch ラッパ / Problem Details の解釈
+│       ├── assets/           # 画像などの静的ファイル
+│       ├── components/       # 画面横断の共通コンポーネント
+│       ├── features/         # ドメインごとの画面部品
+│       ├── lib/              # 金額フォーマットなどの純粋関数
+│       ├── pages/            # ルーティングの単位となる画面
+│       └── routes/           # レイアウトと認証ガード（RequireAuth / GuestOnly）
 └── asset-log/                # バックエンド（Rust）
     ├── Dockerfile
     ├── .env                  # sqlx CLI 用の DATABASE_URL（gitignore 対象）
@@ -411,7 +417,7 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | 21 | 保有一覧・評価損益 | 完了 |
 | 22 | 資産推移・資産配分のグラフ | 完了 |
 | 23 | CSV インポート画面 | 完了 |
-| 24 | Static Site へのデプロイ | — |
+| 24 | Static Site へのデプロイ | 完了 |
 
 ---
 
