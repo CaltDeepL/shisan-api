@@ -14,4 +14,12 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_WEB }}"
+      - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK_WEB が未設定です"
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK"

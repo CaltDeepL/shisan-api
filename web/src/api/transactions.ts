@@ -34,6 +34,7 @@ export function deleteTransaction(id: string): Promise<void> {
 }
 
 /** 入力フォームの値。数値は Decimal を崩さないよう文字列で保持する。 */
+/** ただし traded_at は DateTime なので ISO8601 文字列で保持する。 */
 export type TransactionFormValues = {
   account_id: string;
   asset_id: string;

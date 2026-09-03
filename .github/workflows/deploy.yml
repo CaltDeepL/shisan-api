@@ -12,6 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" > /dev/null
+          if [ -z "$HOOK" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK_URL が未設定です"
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" > /dev/null
           echo "Deploy triggered for ${{ github.event.workflow_run.head_sha }}"
