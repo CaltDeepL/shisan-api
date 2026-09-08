@@ -73,7 +73,7 @@ jobs:
           SQLX_OFFLINE: "false"
         run: cargo sqlx prepare --check -- --all-targets
 
-frontend:
+  frontend:
     name: Frontend (React)
     runs-on: ubuntu-latest
 
