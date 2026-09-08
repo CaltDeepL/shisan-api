@@ -1,0 +1,17 @@
+# このプロジェクトが使う Rust のバージョンを1箇所で決める。
+# rustup がこのファイルを読み、指定のツールチェインが無ければ自動で入れる。
+#
+# なぜ必要か:
+#   バージョンを ci.yml と Dockerfile の2箇所で指定していると、
+#   片方だけ上げたときに乖離する。依存の MSRV が上がった場合、
+#   CI は通るのに Docker のビルドだけが落ちる状態になりうる。
+#
+# 上げ方:
+#   1. channel を新しいバージョンに変更
+#   2. Dockerfile の FROM も同じバージョンに変更（速度のため。
+#      忘れてもビルド中に rustup が取得するので壊れはしない）
+#   3. cargo test / clippy / docker compose build を確認
+
+[toolchain]
+channel = "1.96.0"
+components = ["rustfmt", "clippy"]
