@@ -1,26 +1,25 @@
 
 # ---- builder ----
-FROM rust:1.96-slim AS builder
+FROM rust:1.96-slim-bookworm AS builder
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 
 # 【高速化】Cargoのレジストリとtargetディレクトリをキャッシュマウント
 # ダミーのソースファイルを作って依存関係だけを先にビルド・キャッシュさせる
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/app/target \
-    cargo build --release
 
-COPY . .
 # sqlx! マクロを使う場合はオフラインデータが必要（後述）
 ENV SQLX_OFFLINE=true
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/app/target \
-    touch src/main.rs && \
-    cargo build --release && \
-    cp /app/target/release/asset-log /app/asset-log
+
+# 依存関係をDockerレイヤーとしてキャッシュ
+RUN cargo build --release
+
+    # 本物のソースをコピー
+COPY . .
+
+RUN touch src/main.rs \
+    && cargo build --release \
+    && cp /app/target/release/asset-log /app/asset-log
 
 # ---- runtime ----
 FROM gcr.io/distroless/cc-debian12:nonroot

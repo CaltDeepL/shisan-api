@@ -42,12 +42,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: "1.96.0"
-          components: rustfmt, clippy
-
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
         with:
@@ -61,6 +55,12 @@ jobs:
 
       - name: Test
         run: cargo test --all-targets
+
+      - name: Security audit
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
+      
 
       - name: Install sqlx-cli
         run: cargo install sqlx-cli --version 0.9.0 --no-default-features --features rustls,postgres --locked
@@ -92,6 +92,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: npm audit
+        run: npm audit --audit-level=moderate
 
       - name: Check generated API types are up to date
         run: |
