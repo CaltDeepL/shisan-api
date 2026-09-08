@@ -428,7 +428,7 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | 1 | XIRR | 金額加重収益率。入金タイミングを考慮した実質的なパフォーマンス |
 | 2 | Google ログイン（OIDC） | 現行の register / login + JWT の上に追加 |
 
----
+----
 
 ## License
 
