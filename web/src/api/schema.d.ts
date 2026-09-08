@@ -175,7 +175,6 @@ export interface paths {
          * `GET /holdings?account_id=<uuid>&include_closed=<bool>`
          * @description - `account_id`: 省略時は全口座。他人の・存在しない口座は 404
          *     - `include_closed`: 既定 `false`。`true` で全売却済み（数量0）のポジションも含める
-         *
          *     `holdings` の並び順は口座名昇順 → 同一口座内はシンボル昇順。
          */
         get: operations["list_holdings"];
