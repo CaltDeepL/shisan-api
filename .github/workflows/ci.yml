@@ -2,18 +2,21 @@ name: CI
 
 on:
   push:
-    branches: [main, feature/backend]
+    branches: [main]
   pull_request:
     branches: [main]
-    
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: fmt / clippy / test
+  backend:
+    name: Backend (Rust)
     runs-on: ubuntu-latest
 
     services:
@@ -60,22 +63,61 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
 
-      - name: Test
-        run: cargo test --all-targets
-
-      - name: Security audit
-        run: |
-          command -v cargo-audit >/dev/null || cargo install cargo-audit --locked
-          cargo audit
-      
-
       - name: Install sqlx-cli
-        run:  command -v sqlx >/dev/null || cargo install sqlx-cli --version 0.9.0 --no-default-features --features rustls,postgres --locked
+        run: |
+          command -v sqlx >/dev/null ||
+            cargo install sqlx-cli \
+              --version 0.9.0 \
+              --no-default-features \
+              --features rustls,postgres \
+              --locked
+
       - name: Run migrations
         run: cargo sqlx migrate run
+
+      - name: Test
+        run: cargo test --all-targets
 
       - name: Check .sqlx is up to date
         env:
           SQLX_OFFLINE: "false"
         run: cargo sqlx prepare --check -- --all-targets
 
+      - name: Security audit
+        run: |
+          command -v cargo-audit >/dev/null ||
+            cargo install cargo-audit --version 0.22.2 --locked
+          cargo audit
+
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: web/.node-version
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Security audit
+        run: npm audit --audit-level=moderate
+
+      - name: Check generated API types are up to date
+        run: |
+          npm run gen:api
+          git diff --exit-code -- src/api/schema.d.ts
+
+      - run: npm run lint
+
+      - run: npm run check:schema
+
+      - run: npm run build
