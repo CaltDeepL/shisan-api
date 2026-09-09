@@ -5,6 +5,8 @@
 #     ことになり、数が多いと結局まとめて放置される
 #   - major は破壊的変更を含むので個別の PR にして単独で見る
 #   - 自動マージはしない。CI が緑でも依存の更新は挙動が変わりうる
+#   - labels は明示しない。GitHub 標準の dependencies + ecosystem ラベルを使う
+#     （標準ラベルは Dependabot が必要に応じて自動作成する）
 
 version: 2
 
@@ -20,9 +22,6 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
-    labels:
-      - "dependencies"
-      - "rust"
     groups:
       cargo-minor-patch:
         update-types:
@@ -41,9 +40,6 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
-    labels:
-      - "dependencies"
-      - "frontend"
     groups:
       types:
         patterns:
@@ -64,9 +60,6 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(ci)"
-    labels:
-      - "dependencies"
-      - "github-actions"
     groups:
       actions:
         patterns:
