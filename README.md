@@ -51,12 +51,12 @@
 |---|---|
 | 認証（JWT） | `POST /auth/register` `POST /auth/login` |
 | 口座管理（6種の口座種別） | `/accounts` |
-| 銘柄・価格 | `/assets` `/assets/{id}/prices` |
+| 銘柄・価格 | `/assets` `/prices` `/prices/{asset_id}` |
 | 取引履歴（総平均法で取得単価を算出） | `/transactions` |
 | 保有一覧・評価損益 | `GET /holdings` |
 | 資産推移 | `GET /analytics/asset-history` |
 | 資産配分 | `GET /analytics/allocation` |
-| CSV インポート（dry-run 対応） | `POST /transactions/import` |
+| CSV インポート（dry-run 対応） | `POST /import/transactions` `POST /import/transactions/dry-run` |
 | 為替換算（ECB レート） | 外部 API 連携 |
 | 日次スナップショット | `POST /snapshots/run` |
 | API 仕様 | `GET /openapi.json` `/docs` |
@@ -115,9 +115,13 @@ shisan-api/
 │   ├── .node-version         # Node のバージョン（ローカル / CI / Render で共有）
 │   └── src/
 │       ├── api/              # fetch ラッパ / Problem Details の解釈
+│       ├── assets/           # 画像などの静的ファイル
 │       ├── components/       # 画面横断の共通コンポーネント
+│       ├── features/         # ドメインごとの画面部品
 │       ├── lib/              # 金額フォーマットなどの純粋関数
-│       └── features/         # 画面単位のディレクトリ
+│       ├── pages/            # ルーティングの単位となる画面
+│       ├── routes/           # レイアウトと認証ガード
+│       └── stores/           # 認証セッションの状態管理
 └── asset-log/                # バックエンド（Rust）
     ├── Dockerfile
     ├── .env                  # sqlx CLI 用の DATABASE_URL（gitignore 対象）
@@ -248,6 +252,7 @@ OpenApiRouter::with_openapi(ApiDoc::openapi())
 | バックエンド | Rust 1.96 / axum 0.8 |
 | DB | PostgreSQL 17 |
 | DB アクセス | sqlx 0.9（ORM 不使用） |
+| 認証 | Argon2 0.6 / jsonwebtoken 11（HS256） |
 | フロントエンド | Vite / React / TypeScript / Tailwind CSS v4 |
 | Node | 24（Active LTS。`web/.node-version` で固定） |
 | コンテナ | Docker（マルチステージ + distroless） |
@@ -295,6 +300,20 @@ Vite の `import.meta.env.VITE_*` はビルド時にバンドルへ焼き込ま�
 
 API クライアントの初期化時にガードを置き、未設定のバンドルは読み込み時点で落とすようにしています。
 
+### 認証系依存の major update を回帰テストで守る
+
+Dependabot が作成した `argon2 0.6` と `jsonwebtoken 11` の major update は、API 変更へ追従したうえで取り込みました。Argon2 は salt を内部生成する新 API へ移行し、jsonwebtoken は使用する暗号バックエンドを `aws_lc_rs` に固定しています。
+
+パスワードハッシュは DB に永続化されるため、新規ハッシュの round trip だけでなく、旧バージョンが生成した PHC 文字列を引き続き検証できることもテストしています。依存更新によって既存ユーザーがログインできなくなる退行を検知するためです。
+
+### マイグレーションを起動時に適用する
+
+API は DB への接続後、`sqlx::migrate!()` でバイナリに埋め込んだマイグレーションを起動時に適用します。適用に失敗した場合はリクエストを受け付けずに起動を中止するため、テスト環境だけ最新でローカルや本番のスキーマが古いままになる状態を防ぎます。
+
+### 401 を API クライアントで一元検知する
+
+フロントエンドは認証トークンを付けたリクエストが 401 を返した場合、共通の API クライアントから `auth:expired` イベントを発火します。認証ストアがこのイベントを1箇所で購読してセッションを破棄するため、エンドポイントを追加しても個別のログアウト処理は不要です。
+
 ---
 
 ## Testing
@@ -310,25 +329,25 @@ cargo test --all-targets
 
 外部 API（Frankfurter）は `wiremock` でスタブ化し、正常系に加えて 5xx 応答・タイムアウト時のキャッシュフォールバックまでテストしています。
 
+認証では Argon2 の生成・検証、不正 PHC の拒否、旧 PHC との互換性、JWT の発行・検証を回帰テストに固定しています。
+
 ---
 
 ## CI / CD
 
-バックエンドとフロントエンドで独立した2系統を持ち、それぞれ CI が通ったときだけデプロイが走ります。
+バックエンドとフロントエンドで独立した2系統を持ち、`main` ではそれぞれの CI が通ったときだけ対応するデプロイが走ります。
 
 ```
 push / pull_request
         │
-        ├── asset-log/**  ──→  CI  ──────────→  Deploy
-        │                      fmt                Render Deploy Hook
-        │                      clippy             （Web Service）
-        │                      test
-        │                      sqlx prepare --check
+        ├──→  CI  ─────────────────→  Deploy
+        │     fmt / clippy / test      Render Deploy Hook
+        │     cargo audit              （Web Service）
+        │     sqlx prepare --check
         │
-        └── web/**  ───────→  CI (web)  ──────→  Deploy web
-                               lint                Render Deploy Hook
-                               check:schema        （Static Site）
-                               build
+        └──→  CI (web)  ───────────→  Deploy web
+              npm audit / lint          Render Deploy Hook
+              OpenAPI 型同期 / build    （Static Site）
 
 GitHub Actions cron（JST 07:00）
         └──→  Daily Snapshot
@@ -336,13 +355,15 @@ GitHub Actions cron（JST 07:00）
 
 | ワークフロー | トリガー | 内容 |
 |---|---|---|
-| CI | push / PR（`asset-log/**`） | fmt / clippy / 全テスト / `sqlx prepare --check` |
+| CI | push（`main`, `feature/backend`）/ PR（`main`） | fmt / clippy / 全テスト / `cargo audit` / `sqlx prepare --check` |
 | Deploy | CI の成功（main のみ） | Render の Deploy Hook を起動（Web Service） |
-| CI (web) | push / PR（`web/**`） | lint / check:schema / build |
-| Deploy web | CI (web) の成功（main のみ） | Render の Deploy Hook を起動（Static Site） |
+| CI (web) | push（`main`）/ PR | `npm audit` / lint / OpenAPI 生成型の同期確認 / check:schema / build |
+| Deploy web | CI (web) の成功（main のみ）/ 手動 | Render の Deploy Hook を起動（Static Site） |
 | Daily Snapshot | cron / 手動 | インスタンスを起こしてから `POST /snapshots/run` |
 
-CI とデプロイで**同じ paths 条件を共有**しているのが要点です。CI 側だけに paths フィルタを掛けると、対象外の変更では CI がスキップされ、`workflow_run` を待っているデプロイも連鎖しません。系統ごとにフィルタを揃えることで、この不整合が構造的に起きないようにしています。
+`main` のブランチ保護ではバックエンドとフロントエンドのチェックを必須にしています。ワークフローに `paths` フィルタを置くと、対象外の変更で必須チェックが起動せず `Expected` のまま止まるため、どちらの CI も PR ごとに実行します。
+
+Dependabot は Cargo・npm・GitHub Actions を毎週確認し、minor / patch はグループ化、major は個別 PR として作成します。自動マージは行わず、破壊的変更の確認と CI を経て取り込みます。
 
 `cargo sqlx prepare --check` により、`.sqlx` のオフラインクエリキャッシュが実際のスキーマと乖離していないかを検証しています。これがないと、マイグレーションを変更したのにキャッシュを再生成し忘れたまま Docker ビルド（`SQLX_OFFLINE=true`）が通ってしまいます。
 
@@ -353,13 +374,8 @@ CI とデプロイで**同じ paths 条件を共有**しているのが要点で
 ### 必要なもの
 
 - Docker / Docker Compose
-- Node 24（フロントエンドを動かす場合）
-- Rust 1.96 以降（ローカルでビルドする場合）
-- sqlx-cli（マイグレーションを実行する場合）
-
-```bash
-cargo install sqlx-cli --no-default-features --features rustls,postgres
-```
+- Node 24.20.0（フロントエンドを動かす場合。`web/.node-version` で固定）
+- Rust 1.96.0（ローカルでビルドする場合。`asset-log/rust-toolchain.toml` で固定）
 
 ### 起動
 
@@ -397,10 +413,14 @@ npm run dev                   # http://localhost:5173
 
 ### マイグレーション
 
-sqlx CLI はホスト側で実行します。接続先は `asset-log/.env` の `DATABASE_URL` から自動的に読まれます。
+API は DB への接続後、組み込み済みの全マイグレーションを `sqlx::migrate!()` で自動適用します。通常の `docker compose up` や本番デプロイで、事前に sqlx CLI を実行する必要はありません。
+
+状態確認や手動適用、マイグレーション開発を行う場合だけ sqlx CLI をホスト側で使います。接続先は `asset-log/.env` の `DATABASE_URL` から自動的に読まれます。
 
 ```bash
 cd asset-log
+cargo install sqlx-cli --version 0.9.0 --no-default-features --features rustls,postgres --locked
+
 cp .env.example .env    # 値を編集（DATABASE_URL のユーザー・パスワードはルートの .env と揃える）
 sqlx migrate run
 sqlx migrate info
@@ -465,6 +485,15 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | 23 | CSV インポート画面 |
 | 24 | Static Site へのデプロイ |
 
+### メンテナンス（完了）
+
+| 項目 | 内容 |
+|---|---|
+| Dependabot | Cargo / npm / GitHub Actions の週次更新（minor / patch はグループ化） |
+| 認証依存更新 | `argon2 0.6` / `jsonwebtoken 11` 対応と旧 PHC 互換テスト |
+| CI / リポジトリ保護 | ブランチ保護、フロントエンド CI、`cargo audit` / `npm audit` |
+| ビルド再現性 | Rust toolchain の固定、builder / runtime の Debian 12 統一 |
+
 ---
 
 ## Future Work
@@ -472,9 +501,12 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | 優先 | 項目 | 内容 |
 |---|---|---|
 | 1 | XIRR | 金額加重収益率。入金タイミングを考慮した実質的なパフォーマンス |
-| 2 | Google ログイン（OIDC） | 現行の register / login + JWT の上に追加 |
-| 3 | ルート単位のコード分割 | 現状はバンドルが単一チャンク（742KB / gzip 214KB） |
-| 4 | コールドスタート対策 | 無料プランのスピンダウンにより初回リクエストが数十秒待たされる |
+| 2 | パスワード要件の強化 | 上限を Unicode 文字数で統一し、漏えい・頻出パスワードの拒否リストを追加 |
+| 3 | JWT 回帰テストの拡張 | 有効期限切れ、payload 改ざん、異なる署名鍵を拒否することを固定 |
+| 4 | OpenAPI エラー契約 | 全 4xx / 5xx が `ProblemDetails` を参照することを自動検証 |
+| 5 | Google ログイン（OIDC） | 現行の register / login + JWT の上に追加 |
+| 6 | ルート単位のコード分割 | 現状はバンドルが単一チャンク（742KB / gzip 214KB） |
+| 7 | コールドスタート対策 | 無料プランのスピンダウンにより初回リクエストが数十秒待たされる |
 
 ---
 
