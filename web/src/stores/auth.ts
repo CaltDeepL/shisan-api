@@ -30,11 +30,17 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-/** 有効期限内のトークンだけを返す。期限切れは null 扱い。 */
+/** 有効期限内のトークンだけを返す。期限切れ・不完全なセッションはその場で破棄する。 */
 export function currentToken(): string | null {
   const { token, expiresAt } = useAuthStore.getState();
-  if (!token || !expiresAt) return null;
-  if (Date.now() >= expiresAt - SKEW_MS) return null;
+
+  if (!token || !expiresAt || Date.now() >= expiresAt - SKEW_MS) {
+    if (token || expiresAt) {
+      useAuthStore.getState().logout();
+    }
+    return null;
+  }
+
   return token;
 }
 
@@ -46,9 +52,18 @@ export function useIsAuthenticated(): boolean {
   });
 }
 
+let initialized = false;
+
 /** アプリ起動時に一度だけ呼ぶ。 */
 export function initAuth() {
   setTokenProvider(currentToken);
+
+  if (initialized) return;
+  initialized = true;
+
+  // persist から復元された期限切れセッションも初期表示前に掃除する。
+  currentToken();
+
   window.addEventListener(AUTH_EXPIRED, () => {
     useAuthStore.getState().logout();
   });
