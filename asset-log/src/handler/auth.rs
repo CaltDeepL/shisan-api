@@ -8,6 +8,24 @@ use crate::openapi::ProblemDetailsSchema as ProblemDetails;
 use crate::repository::user_repository;
 use crate::state::AppState;
 use utoipa::ToSchema;
+
+const MIN_PASSWORD_CHARS: usize = 12;
+const MAX_PASSWORD_CHARS: usize = 256;
+const MAX_PASSWORD_BYTES: usize = 512;
+
+const COMMON_PASSWORDS: &[&str] = &[
+    "password1234",
+    "password12345",
+    "password123456",
+    "qwertyuiop12",
+    "qwerty123456",
+    "123456789012",
+    "1234567890123456",
+    "letmein123456",
+    "admin12345678",
+    "welcome123456",
+];
+
 /// ログイン・登録の認証情報
 #[derive(Deserialize, ToSchema)]
 pub struct Credentials {
@@ -18,12 +36,14 @@ pub struct Credentials {
     #[schema(example = "correct-horse-battery-staple")]
     pub password: String,
 }
+
 #[derive(Serialize, ToSchema)]
 pub struct TokenResponse {
     pub access_token: String,
     pub token_type: &'static str,
     pub expires_in: i64,
 }
+
 /// 認証済みユーザーの情報
 #[derive(Serialize, ToSchema)]
 pub struct MeResponse {
@@ -37,6 +57,12 @@ fn field_error(field: &str, message: &str) -> FieldError {
     }
 }
 
+fn is_common_password(password: &str) -> bool {
+    COMMON_PASSWORDS
+        .iter()
+        .any(|candidate| password.eq_ignore_ascii_case(candidate))
+}
+
 fn validate(c: &Credentials) -> Result<String, AppError> {
     let email = c.email.trim().to_lowercase();
     let mut errors: Vec<FieldError> = Vec::new();
@@ -47,14 +73,32 @@ fn validate(c: &Credentials) -> Result<String, AppError> {
             "メールアドレスの形式が正しくありません",
         ));
     }
-    if c.password.chars().count() < 12 {
+
+    let password_chars = c.password.chars().count();
+
+    if password_chars < MIN_PASSWORD_CHARS {
         errors.push(field_error(
             "password",
             "パスワードは12文字以上にしてください",
         ));
     }
-    if c.password.len() > 1024 {
-        errors.push(field_error("password", "パスワードが長すぎます"));
+    if password_chars > MAX_PASSWORD_CHARS {
+        errors.push(field_error(
+            "password",
+            "パスワードは256文字以内にしてください",
+        ));
+    }
+    if c.password.len() > MAX_PASSWORD_BYTES {
+        errors.push(field_error(
+            "password",
+            "パスワードはUTF-8で512バイト以内にしてください",
+        ));
+    }
+    if is_common_password(&c.password) {
+        errors.push(field_error(
+            "password",
+            "推測されやすいパスワードは使用できません",
+        ));
     }
 
     if errors.is_empty() {
@@ -66,6 +110,7 @@ fn validate(c: &Credentials) -> Result<String, AppError> {
         })
     }
 }
+
 #[utoipa::path(
     post,
     path = "/auth/register",
@@ -97,6 +142,7 @@ pub async fn register(
 
     Ok((StatusCode::CREATED, Json(issue(&state.jwt, user_id)?)))
 }
+
 #[utoipa::path(
     post,
     path = "/auth/login",
@@ -133,6 +179,7 @@ pub async fn login(
     let user_id = verified.ok_or(AppError::InvalidCredentials)?;
     Ok(Json(issue(&state.jwt, user_id)?))
 }
+
 #[utoipa::path(
     get,
     path = "/me",
@@ -153,6 +200,7 @@ fn issue(keys: &JwtKeys, user_id: uuid::Uuid) -> Result<TokenResponse, AppError>
     let (access_token, expires_in) = keys
         .issue(user_id)
         .map_err(|e| AppError::Internal(anyhow::anyhow!(e)))?;
+
     Ok(TokenResponse {
         access_token,
         token_type: "Bearer",

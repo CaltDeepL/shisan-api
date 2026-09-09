@@ -57,7 +57,10 @@ pub struct TestUser {
 /// リポジトリ層ではなく API 経由にしているのは、
 /// 認証まで含めた本番と同じ経路を通すため。
 pub async fn register_user(app: &Router, email: &str) -> TestUser {
-    let body = json!({ "email": email, "password": "password1234" });
+    let body = json!({
+        "email": email,
+        "password": "integration-passphrase-123"
+    });
     let (status, json) = request(app, Method::POST, "/auth/register", None, Some(body)).await;
     assert_eq!(status, StatusCode::CREATED, "register failed: {json}");
     let token = json["access_token"]
@@ -115,6 +118,7 @@ pub async fn request(
 
     (status, json)
 }
+
 /// バッチ用トークン。snapshots_test が Authorization ヘッダに使う。
 #[allow(dead_code)]
 pub const JOB_TOKEN: &str = "test-job-token-0123456789abcdefghij";

@@ -52,7 +52,7 @@ export function RegisterPage() {
           value={password}
           onChange={setPassword}
           error={fieldErrors.password}
-          hint="12文字以上"
+          hint="12〜256文字・一般的なパスワードは使用不可"
           autoComplete="new-password"
         />
 
