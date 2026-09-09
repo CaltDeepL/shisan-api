@@ -1,0 +1,73 @@
+# 依存の更新を Dependabot に任せる。
+#
+# 方針:
+#   - patch / minor はまとめて1本の PR にする。個別に来ると週に10本以上開く
+#     ことになり、数が多いと結局まとめて放置される
+#   - major は破壊的変更を含むので個別の PR にして単独で見る
+#   - 自動マージはしない。CI が緑でも依存の更新は挙動が変わりうる
+
+version: 2
+
+updates:
+  # バックエンド（Rust）
+  - package-ecosystem: "cargo"
+    directory: "/asset-log"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "dependencies"
+      - "rust"
+    groups:
+      cargo-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # フロントエンド（npm）
+  # package.json は web/ にある
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "dependencies"
+      - "frontend"
+    groups:
+      types:
+        patterns:
+          - "@types/*"
+      npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      actions:
+        patterns:
+          - "*"
