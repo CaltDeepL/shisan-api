@@ -22,7 +22,7 @@ Dependabot 導入後に残っていた認証系の major update 2件を対応し
 ```toml
 uuid = { version = "1", features = ["v4", "serde"] }
 
-jsonwebtoken = { version = "11", default-features = false, features = ["rust_crypto"] }
+jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs"] }
 argon2 = "0.6"
 
 reqwest = { version = "0.12", default-features = false, features = [
@@ -40,7 +40,7 @@ rand_core = { version = "0.6", features = ["getrandom"] }
 
 の直接依存は削除した。
 
-`jsonwebtoken 11` は暗号 backend の指定が必須になったため、HS256 の shared secret を使う現在の実装に合わせて `rust_crypto` を明示した。
+`jsonwebtoken 11` は暗号 backend の指定が必須になったため、HS256 の shared secret を使う現在の実装に合わせて `raws_lc_rs` を明示した。
 
 `use_pem` は使用していないため `default-features = false` にしている。
 
@@ -106,13 +106,13 @@ pub fn verify_password(plain: &str, hash: &str) -> bool {
 Could not automatically determine the process-level CryptoProvider from jsonwebtoken crate features.
 
 Call CryptoProvider::install_default() before this point to select a provider manually,
-or make sure exactly one of the 'rust_crypto' and 'aws_lc_rs' features is enabled.
+or make sure exactly one of the 'aws_lc_rs' and 'aws_lc_rs' features is enabled.
 ```
 
 アプリ起動時に `CryptoProvider::install_default()` を追加するのではなく、依存定義側で provider を一意に決める方針にした。
 
 ```toml
-jsonwebtoken = { version = "11", default-features = false, features = ["rust_crypto"] }
+jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs"] }
 ```
 
 既存の `JwtKeys` の公開 API は変更していない。
@@ -177,7 +177,7 @@ error: package ID specification `argon2` did not match any packages
 
 ```toml
 argon2 = "0.6"
-jsonwebtoken = { version = "11", default-features = false, features = ["rust_crypto"] }
+jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs"] }
 ```
 
 その後に Cargo の dependency resolution を走らせて `Cargo.lock` を更新した。
