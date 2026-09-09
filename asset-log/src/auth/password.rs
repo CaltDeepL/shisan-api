@@ -1,6 +1,5 @@
 use argon2::Argon2;
-use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
-use rand_core::OsRng;
+use argon2::password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash};
 use std::sync::LazyLock;
 
 /// ユーザー不在時に検証を空回しするためのダミー。
@@ -10,9 +9,8 @@ static DUMMY_HASH: LazyLock<String> = LazyLock::new(|| {
 });
 
 pub fn hash_password(plain: &str) -> anyhow::Result<String> {
-    let salt = SaltString::generate(&mut OsRng);
     Argon2::default()
-        .hash_password(plain.as_bytes(), &salt)
+        .hash_password(plain.as_bytes())
         .map(|h| h.to_string())
         .map_err(|e| anyhow::anyhow!("password hashing failed: {e}"))
 }

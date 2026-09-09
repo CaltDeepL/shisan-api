@@ -1,19 +1,24 @@
 # shisan-api
 
 [![CI](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci.yml/badge.svg)](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci.yml)
+[![CI (web)](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci-web.yml/badge.svg)](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci-web.yml)
 
-**NISA・iDeCo・特定口座・一般口座を横断して、資産・損益・収益率を管理する資産管理 API。**
+**NISA・iDeCo・特定口座・一般口座を横断して、資産・損益・収益率を管理する資産管理サービス。**
 
 証券会社ごとにアプリを開いて残高を確認する手間をなくし、「制度をまたいだ資産全体で、実際にいくら増えたのか」を一箇所で把握することを目的としています。
 
-**デモ**: https://shisan-api.onrender.com/docs
+### デモ
 
+| | URL |
+|---|---|
+| アプリ | https://shisan-web.onrender.com |
+| API ドキュメント（Swagger UI） | https://shisan-api.onrender.com/docs |
 
-Swagger UI からブラウザ上で全エンドポイントを試せます。`POST /auth/register` でアカウントを作成し、返却されたトークンを右上の **Authorize** に入力してください。
+アプリはトップの新規登録からアカウントを作成すればそのまま試せます。API を直接叩く場合は Swagger UI の `POST /auth/register` でアカウントを作成し、返却されたトークンを右上の **Authorize** に入力してください。
 
-> 無料プランで稼働しているため、アクセスがない間はインスタンスが停止します。最初のリクエストは応答まで数十秒かかることがあります。
+> API は無料プランで稼働しているため、アクセスがない間はインスタンスが停止します。最初のリクエストは応答まで数十秒かかることがあります（フロントエンドは CDN 配信のため停止しません）。
 
-> **ポートフォリオプロジェクトです。** バックエンド全16タスクのロードマップを完了し、CI・自動デプロイ・日次バッチが稼働しています。現在はフロントエンド（React SPA）を実装中です。
+> **ポートフォリオプロジェクトです。** バックエンド16タスク・フロントエンド8タスクのロードマップを完了し、CI・自動デプロイ・日次バッチが稼働しています。
 
 ---
 
@@ -56,6 +61,8 @@ Swagger UI からブラウザ上で全エンドポイントを試せます。`PO
 | 日次スナップショット | `POST /snapshots/run` |
 | API 仕様 | `GET /openapi.json` `/docs` |
 
+上記すべてに対応する画面をフロントエンド（React SPA）で提供しています。
+
 ---
 
 ## Architecture
@@ -79,23 +86,38 @@ Swagger UI からブラウザ上で全エンドポイントを試せます。`PO
            └── PriceProvider
 ```
 
+### デプロイ構成
+
+フロントエンドと API は別オリジンの独立したサービスとして運用しています。
+
+```
+  ブラウザ
+     │
+     ├──────────────→  Render Static Site（CDN 配信）
+     │                  shisan-web.onrender.com
+     │                  ビルド済みの React SPA
+     │
+     └──────────────→  Render Web Service（Docker）
+        (CORS)          shisan-api.onrender.com
+                              │
+                              ↓
+                        Neon（PostgreSQL）
+```
+
 ### ディレクトリ構成
 
 ```
 shisan-api/
 ├── compose.yaml              # Postgres + API
 ├── .env                      # Compose 用の環境変数（gitignore 対象）
-├── .github/workflows/        # CI / Deploy / Daily Snapshot
+├── .github/workflows/        # CI / Deploy / CI (web) / Deploy web / Daily Snapshot
 ├── web/                      # フロントエンド（Vite + React + TypeScript）
 │   ├── .node-version         # Node のバージョン（ローカル / CI / Render で共有）
 │   └── src/
 │       ├── api/              # fetch ラッパ / Problem Details の解釈
-│       ├── assets/           # 画像などの静的ファイル
 │       ├── components/       # 画面横断の共通コンポーネント
-│       ├── features/         # ドメインごとの画面部品
 │       ├── lib/              # 金額フォーマットなどの純粋関数
-│       ├── pages/            # ルーティングの単位となる画面
-│       └── routes/           # レイアウトと認証ガード（RequireAuth / GuestOnly）
+│       └── features/         # 画面単位のディレクトリ
 └── asset-log/                # バックエンド（Rust）
     ├── Dockerfile
     ├── .env                  # sqlx CLI 用の DATABASE_URL（gitignore 対象）
@@ -185,11 +207,17 @@ SQL を書く負担は残りますが、リポジトリ層に閉じ込めるこ�
 
 GitHub Actions の `schedule` から HTTP で起動する方式なら、インスタンスを起こしてからバッチを叩けます。認証はユーザー JWT とは分離したバッチ専用トークン（`SNAPSHOT_JOB_TOKEN`）を使い、未設定時は 503 で拒否します。
 
+### なぜフロントエンドを Web Service ではなく Static Site にしたのか
+
+ビルド成果物が静的ファイルのみで、サーバサイドの処理を必要としないため。Static Site は CDN から配信されるので、無料プランでもインスタンスのスピンダウンが起きません。API 側の起動待ちは発生しますが、少なくとも画面は即座に表示されます。
+
+代償として、SPA のクライアントサイドルーティングにはリライト設定が必要です。`/holdings` を直接開いたときにファイルが存在せず 404 になるため、`/*` → `/index.html` の Rewrite ルールを設定しています。Render はリソースが存在するパスにはルールを適用しないため、`/assets/*.js` などのバンドルがワイルドカードに巻き込まれることはありません。
+
 ### なぜ Render の auto-deploy を無効にしたのか
 
 Render の auto-deploy は `main` への push を検知して即座にビルドを始めるため、**テストの結果を待ちません**。テストが落ちるコードでもデプロイされてしまいます。
 
-auto-deploy を切り、GitHub Actions の `workflow_run` イベントで CI の完了と結果を受け取り、`main` ブランチかつ成功時に限って Deploy Hook を叩く構成にしました。CI が green のときだけデプロイが走ります。
+auto-deploy を切り、GitHub Actions の `workflow_run` イベントで CI の完了と結果を受け取り、`main` ブランチかつ成功時に限って Deploy Hook を叩く構成にしました。CI が green のときだけデプロイが走ります。フロントエンドも同じ方式に揃えています。
 
 ### なぜ外部 API を trait で抽象化したのか
 
@@ -221,9 +249,10 @@ OpenApiRouter::with_openapi(ApiDoc::openapi())
 | DB | PostgreSQL 17 |
 | DB アクセス | sqlx 0.9（ORM 不使用） |
 | フロントエンド | Vite / React / TypeScript / Tailwind CSS v4 |
+| Node | 24（Active LTS。`web/.node-version` で固定） |
 | コンテナ | Docker（マルチステージ + distroless） |
 | 外部 API | Frankfurter（ECB 為替レート） |
-| ホスティング | Render（Docker）/ Neon（Postgres） |
+| ホスティング | Render（API: Docker / フロント: Static Site）/ Neon（Postgres） |
 | CI / CD | GitHub Actions |
 
 ---
@@ -258,7 +287,13 @@ reqwest の `blocking` フィーチャーは有効化せず、current-thread の
 
 最外層に置くことで、401 などのエラーレスポンスにも CORS ヘッダが付きます。ここが抜けると、ブラウザ側では認証エラーがネットワークエラーとして見え、原因究明が困難になります。
 
-許可オリジンは環境変数から読み、スキームの有無と末尾スラッシュを起動時に検証します。
+許可オリジンは `CORS_ALLOWED_ORIGINS`（カンマ区切り）から読み、スキームの有無と末尾スラッシュを起動時に検証します。値が空のときはブラウザからのリクエストが全て拒否されるため、起動時に警告を出します。設定漏れでも API は正常に起動してしまい、症状が「フロントからだけ動かない」という形で出るためです。
+
+### 環境変数の設定漏れをビルド時ではなく起動時に検出する
+
+Vite の `import.meta.env.VITE_*` はビルド時にバンドルへ焼き込まれます。設定を忘れたままビルドすると、リクエスト先が `undefined/auth/login` になった成果物が出来上がり、画面を触るまで気づけません。
+
+API クライアントの初期化時にガードを置き、未設定のバンドルは読み込み時点で落とすようにしています。
 
 ---
 
@@ -279,31 +314,35 @@ cargo test --all-targets
 
 ## CI / CD
 
-```
-PR
- ↓
-CI
- ├─ cargo fmt --check
- ├─ cargo clippy -D warnings
- ├─ cargo test（ユニット + 統合）
- └─ cargo sqlx prepare --check
+バックエンドとフロントエンドで独立した2系統を持ち、それぞれ CI が通ったときだけデプロイが走ります。
 
-main merge
- ↓
-CI green
- ↓
-Render Deploy Hook
+```
+push / pull_request
+        │
+        ├── asset-log/**  ──→  CI  ──────────→  Deploy
+        │                      fmt                Render Deploy Hook
+        │                      clippy             （Web Service）
+        │                      test
+        │                      sqlx prepare --check
+        │
+        └── web/**  ───────→  CI (web)  ──────→  Deploy web
+                               lint                Render Deploy Hook
+                               check:schema        （Static Site）
+                               build
 
 GitHub Actions cron（JST 07:00）
- ↓
-Daily Snapshot
+        └──→  Daily Snapshot
 ```
 
 | ワークフロー | トリガー | 内容 |
 |---|---|---|
-| CI | push / pull_request | fmt / clippy / 全テスト / `sqlx prepare --check` |
-| Deploy | CI の成功（main のみ） | Render の Deploy Hook を起動 |
+| CI | push / PR（`asset-log/**`） | fmt / clippy / 全テスト / `sqlx prepare --check` |
+| Deploy | CI の成功（main のみ） | Render の Deploy Hook を起動（Web Service） |
+| CI (web) | push / PR（`web/**`） | lint / check:schema / build |
+| Deploy web | CI (web) の成功（main のみ） | Render の Deploy Hook を起動（Static Site） |
 | Daily Snapshot | cron / 手動 | インスタンスを起こしてから `POST /snapshots/run` |
+
+CI とデプロイで**同じ paths 条件を共有**しているのが要点です。CI 側だけに paths フィルタを掛けると、対象外の変更では CI がスキップされ、`workflow_run` を待っているデプロイも連鎖しません。系統ごとにフィルタを揃えることで、この不整合が構造的に起きないようにしています。
 
 `cargo sqlx prepare --check` により、`.sqlx` のオフラインクエリキャッシュが実際のスキーマと乖離していないかを検証しています。これがないと、マイグレーションを変更したのにキャッシュを再生成し忘れたまま Docker ビルド（`SQLX_OFFLINE=true`）が通ってしまいます。
 
@@ -314,6 +353,7 @@ Daily Snapshot
 ### 必要なもの
 
 - Docker / Docker Compose
+- Node 24（フロントエンドを動かす場合）
 - Rust 1.96 以降（ローカルでビルドする場合）
 - sqlx-cli（マイグレーションを実行する場合）
 
@@ -340,14 +380,20 @@ docker compose up --build -d
 curl http://localhost:8080/health
 ```
 
+> `POSTGRES_PASSWORD` は DB の初期化時にボリュームへ永続化されます。一度起動したあとに `.env` の値を変更しても既存のボリュームには反映されないため、変更する場合は `docker compose down -v` が必要です。
+
 ### フロントエンド
+
+`web/.node-version` に対応バージョンを記載しています。fnm を使っている場合は `cd` で自動的に切り替わります。
 
 ```bash
 cd web
-npm install
+npm ci
 cp .env.example .env.local    # VITE_API_BASE_URL を設定
 npm run dev                   # http://localhost:5173
 ```
+
+ローカル開発ではフロント（5173）と API（8080）が別オリジンになるため、ルートの `.env` の `CORS_ALLOWED_ORIGINS` に `http://localhost:5173` が含まれている必要があります（`.env.example` の既定値に含まれています）。
 
 ### マイグレーション
 
@@ -406,18 +452,18 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | 15 | OpenAPI（utoipa / Swagger UI） |
 | 16 | デプロイ・GitHub Actions |
 
-### フロントエンド（実装中）
+### フロントエンド（完了）
 
-| # | タスク | 状態 |
-|---|---|---|
-| 17 | CORS 設定 + React SPA 雛形 | 完了 |
-| 18 | 認証画面 | 完了 |
-| 19 | 口座 CRUD 画面 | 完了 |
-| 20 | 銘柄・取引の登録画面 | 完了 |
-| 21 | 保有一覧・評価損益 | 完了 |
-| 22 | 資産推移・資産配分のグラフ | 完了 |
-| 23 | CSV インポート画面 | 完了 |
-| 24 | Static Site へのデプロイ | 完了 |
+| # | タスク |
+|---|---|
+| 17 | CORS 設定 + React SPA 雛形 |
+| 18 | 認証画面 |
+| 19 | 口座 CRUD 画面 |
+| 20 | 銘柄・取引の登録画面 |
+| 21 | 保有一覧・評価損益 |
+| 22 | 資産推移・資産配分のグラフ |
+| 23 | CSV インポート画面 |
+| 24 | Static Site へのデプロイ |
 
 ---
 
@@ -427,8 +473,10 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 |---|---|---|
 | 1 | XIRR | 金額加重収益率。入金タイミングを考慮した実質的なパフォーマンス |
 | 2 | Google ログイン（OIDC） | 現行の register / login + JWT の上に追加 |
+| 3 | ルート単位のコード分割 | 現状はバンドルが単一チャンク（742KB / gzip 214KB） |
+| 4 | コールドスタート対策 | 無料プランのスピンダウンにより初回リクエストが数十秒待たされる |
 
-----
+---
 
 ## License
 
