@@ -9,12 +9,11 @@ import {
   type PatchAssetRequest,
   type UpsertPricesRequest,
 } from "@/api/assets";
-
-export const assetsKey = ["assets"] as const;
+import { invalidateQueryRoots, queryKeys } from "@/lib/queryKeys";
 
 export function useAssets(q: string) {
   return useQuery({
-    queryKey: [...assetsKey, q] as const,
+    queryKey: [...queryKeys.assets, q] as const,
     queryFn: () => listAssets(q),
     // 検索語ごとにキャッシュが分かれるので、切り替え中に一覧が空にならないようにする
     placeholderData: keepPreviousData,
@@ -25,7 +24,13 @@ export function useCreateAsset() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateAssetRequest) => createAsset(body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: assetsKey }),
+    onSuccess: () =>
+      invalidateQueryRoots(
+        qc,
+        queryKeys.assets,
+        queryKeys.holdings,
+        queryKeys.analytics,
+      ),
   });
 }
 
@@ -33,16 +38,19 @@ export function useUpdateAsset(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: PatchAssetRequest) => patchAsset(id, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: assetsKey }),
+    onSuccess: () =>
+      invalidateQueryRoots(
+        qc,
+        queryKeys.assets,
+        queryKeys.holdings,
+        queryKeys.analytics,
+      ),
   });
 }
 
-export const pricesKey = (assetId: string) =>
-  [...assetsKey, assetId, "prices"] as const;
-
 export function usePrices(assetId: string) {
   return useQuery({
-    queryKey: pricesKey(assetId),
+    queryKey: queryKeys.prices(assetId),
     queryFn: () => listPrices(assetId),
   });
 }
@@ -51,6 +59,12 @@ export function useUpsertPrices(assetId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: UpsertPricesRequest) => upsertPrices(body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: pricesKey(assetId) }),
+    onSuccess: () =>
+      invalidateQueryRoots(
+        qc,
+        queryKeys.prices(assetId),
+        queryKeys.holdings,
+        queryKeys.analytics,
+      ),
   });
 }

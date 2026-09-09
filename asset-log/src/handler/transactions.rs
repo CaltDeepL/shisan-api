@@ -134,7 +134,7 @@ pub async fn create(
         return Err(AppError::NotFound("口座"));
     }
     let Some(price_unit) = ctx.price_unit else {
-        return Err(AppError::NotFound("銘柄が見つかりません"));
+        return Err(AppError::NotFound("銘柄"));
     };
 
     let mut tx = state.db.begin().await?;
@@ -222,7 +222,7 @@ pub async fn show(
 ) -> Result<Json<TransactionResponse>, AppError> {
     let found = transaction_repo::find_by_id(&state.db, user.0, id)
         .await?
-        .ok_or(AppError::NotFound("取引が見つかりません"))?;
+        .ok_or(AppError::NotFound("取引"))?;
     Ok(Json(found.into()))
 }
 #[utoipa::path(
@@ -243,7 +243,7 @@ pub async fn delete(
 ) -> Result<StatusCode, AppError> {
     let target = transaction_repo::find_by_id(&state.db, user.0, id)
         .await?
-        .ok_or(AppError::NotFound("取引が見つかりません"))?;
+        .ok_or(AppError::NotFound("取引"))?;
 
     let ctx = transaction_repo::fetch_position_context(
         &state.db,
@@ -252,9 +252,7 @@ pub async fn delete(
         target.asset_id,
     )
     .await?;
-    let price_unit = ctx
-        .price_unit
-        .ok_or(AppError::NotFound("銘柄が見つかりません"))?;
+    let price_unit = ctx.price_unit.ok_or(AppError::NotFound("銘柄"))?;
 
     let mut tx = state.db.begin().await?;
     transaction_repo::lock_position(&mut tx, target.account_id, target.asset_id).await?;
@@ -262,7 +260,7 @@ pub async fn delete(
     if !transaction_repo::delete(&mut tx, user.0, id).await? {
         // ロック待ちの間に他リクエストが消していた場合
         tx.rollback().await?;
-        return Err(AppError::NotFound("取引が見つかりません"));
+        return Err(AppError::NotFound("取引"));
     }
 
     let trades =

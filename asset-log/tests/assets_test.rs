@@ -112,7 +112,7 @@ async fn other_users_asset_is_not_found(db: PgPool) {
     .await;
     let id = asset["id"].as_str().unwrap();
 
-    let (status, _) = request(
+    let (status, problem) = request(
         &app,
         Method::GET,
         &format!("/assets/{id}"),
@@ -121,6 +121,7 @@ async fn other_users_asset_is_not_found(db: PgPool) {
     )
     .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
+    assert_eq!(problem["detail"], "銘柄が見つかりません");
 
     let (status, _) = request(
         &app,
