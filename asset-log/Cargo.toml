@@ -21,7 +21,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
-jsonwebtoken = "9"
+jsonwebtoken = "11"
 argon2 = "0.5"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "http2"] }
 async-trait = "0.1"
