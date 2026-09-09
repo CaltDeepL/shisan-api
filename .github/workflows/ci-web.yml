@@ -2,9 +2,9 @@ name: CI (web)
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/ci-web.yml']
+    
   pull_request:
-    paths: ['web/**', '.github/workflows/ci-web.yml']
+    
 jobs:
   build:
     name: Frontend (React)      # ← ステータスチェック名を明示

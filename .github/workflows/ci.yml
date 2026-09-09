@@ -3,10 +3,9 @@ name: CI
 on:
   push:
     branches: [main, feature/backend]
-    paths: ['asset-log/**', '.github/workflows/ci.yml']
   pull_request:
     branches: [main]
-    paths: ['asset-log/**', '.github/workflows/ci.yml']
+    
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
