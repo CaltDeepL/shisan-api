@@ -181,33 +181,24 @@ fn unique_message(constraint: Option<&str>) -> &'static str {
     match constraint {
         Some("users_email_lower_key") => "このメールアドレスは既に登録されています",
         Some("accounts_user_name_key") => "同じ名前の口座が既に存在します",
-
-        // 💡 ここに追記（409 Conflict にマッピングされます）
         Some("assets_user_symbol_key") => "このシンボルは既に登録されています",
-
         _ => "既に登録されている値です",
     }
 }
 
-fn check_message(constraint: Option<&str>) -> String {
-    // 💡 メッセージ構築のために戻り値を String にする、または既存に合わせて型を調整
+fn check_message(constraint: Option<&str>) -> &'static str {
     match constraint {
-        Some("accounts_currency_format") => {
-            "通貨コードは ISO 4217 の大文字3文字で指定してください".to_owned()
-        }
-        Some("accounts_name_not_blank") => "口座名を空にはできません".to_owned(),
+        Some("accounts_currency_format") => "通貨コードは ISO 4217 の大文字3文字で指定してください",
+        Some("accounts_name_not_blank") => "口座名を空にはできません",
         Some("accounts_withholding_only_tokutei") => {
-            "源泉徴収区分は特定口座のみ指定できます（特定口座では必須です）".to_owned()
+            "源泉徴収区分は特定口座のみ指定できます（特定口座では必須です）"
         }
-
-        // 💡 ここから下に追記（422 Unprocessable Entity にマッピングされます）
-        Some("assets_currency_format") => "通貨コードの形式が不正です".to_owned(),
-        Some("assets_name_not_blank") => "アセット名は空欄にできません".to_owned(),
-        Some("assets_symbol_not_blank") => "シンボルは空欄にできません".to_owned(),
-        Some("assets_price_unit_positive") => "価格単位は正の数である必要があります".to_owned(),
-        Some("asset_prices_price_non_negative") => "価格は0以上である必要があります".to_owned(),
-
-        _ => "入力値が制約を満たしていません".to_owned(),
+        Some("assets_currency_format") => "通貨コードの形式が不正です",
+        Some("assets_name_not_blank") => "アセット名は空欄にできません",
+        Some("assets_symbol_not_blank") => "シンボルは空欄にできません",
+        Some("assets_price_unit_positive") => "価格単位は正の数である必要があります",
+        Some("asset_prices_price_non_negative") => "価格は0以上である必要があります",
+        _ => "入力値が制約を満たしていません",
     }
 }
 
@@ -255,14 +246,14 @@ impl IntoResponse for AppError {
             tracing::warn!(%trace_id, status = status.as_u16(), error = %self, "request rejected");
         }
 
-        let empty: Vec<FieldError> = Vec::new();
+        let empty: &[FieldError] = &[];
         let (detail, errors) = match &self {
             // 5xx は内部情報を返さない
             Self::Database(_) | Self::Internal(_) => {
-                ("サーバー内部でエラーが発生しました".to_owned(), &empty)
+                ("サーバー内部でエラーが発生しました".to_owned(), empty)
             }
-            Self::UnprocessableEntity { detail, errors } => (detail.clone(), errors),
-            other => (other.to_string(), &empty),
+            Self::UnprocessableEntity { detail, errors } => (detail.clone(), errors.as_slice()),
+            other => (other.to_string(), empty),
         };
 
         let body = ProblemDetails {

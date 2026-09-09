@@ -68,7 +68,7 @@ export function DeleteAccountDialog({ account, onClose }: Props) {
             role="alert"
             className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
           >
-            <p>取引が登録されているため削除できません。</p>
+            <p>{apiError.problem.detail}</p>
             <p className="mt-1 text-red-600">
               先にこの口座の取引をすべて削除してください。
             </p>

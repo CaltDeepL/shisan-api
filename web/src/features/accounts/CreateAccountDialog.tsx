@@ -4,6 +4,7 @@ import { DialogShell } from "@/components/DialogShell";
 import { Field } from "@/components/Field";
 import { FormError } from "@/components/FormError";
 import type { AccountType, CreateAccountRequest } from "@/api/accounts";
+import { currencyOptions } from "@/lib/currencies";
 import { useCreateAccount } from "./queries";
 import { accountTypeLabels, accountTypeOptions } from "./labels";
 
@@ -44,7 +45,7 @@ export function CreateAccountDialog({ open, onClose }: Props) {
   // 409 は errors[] を持たないので、口座名の重複として自前で紐づける
   const nameError =
     apiError?.status === 409
-      ? "同じ名前の口座が既に登録されています"
+      ? apiError.problem.detail
       : fieldErrors.name;
 
   // フィールドに出せたものは上段に重複表示しない
@@ -158,14 +159,38 @@ export function CreateAccountDialog({ open, onClose }: Props) {
           hint="任意。空欄のままでも登録できます。"
         />
 
-        <Field
-          label="通貨"
-          name="currency"
-          value={values.currency}
-          onChange={(currency) => setValues({ ...values, currency })}
-          error={fieldErrors.currency}
-          hint="3文字の通貨コード。作成後は変更できません。"
-        />
+        <div className="space-y-1">
+          <label
+            htmlFor="currency"
+            className="block text-sm font-medium text-slate-700"
+          >
+            通貨
+          </label>
+          <select
+            id="currency"
+            name="currency"
+            value={values.currency}
+            onChange={(e) => setValues({ ...values, currency: e.target.value })}
+            aria-invalid={fieldErrors.currency ? true : undefined}
+            aria-describedby={fieldErrors.currency ? "currency-error" : "currency-hint"}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:ring-2 focus:ring-slate-300"
+          >
+            {currencyOptions.map((currency) => (
+              <option key={currency} value={currency}>
+                {currency}
+              </option>
+            ))}
+          </select>
+          {fieldErrors.currency ? (
+            <p id="currency-error" className="text-sm text-red-600">
+              {fieldErrors.currency}
+            </p>
+          ) : (
+            <p id="currency-hint" className="text-sm text-slate-500">
+              作成後は変更できません。
+            </p>
+          )}
+        </div>
 
         <div className="flex justify-end gap-2 pt-2">
           <button

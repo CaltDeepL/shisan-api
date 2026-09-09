@@ -1,7 +1,6 @@
 # shisan-api
 
 [![CI](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci.yml/badge.svg)](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci.yml)
-[![CI (web)](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci-web.yml/badge.svg)](https://github.com/CaltDeepL/shisan-api/actions/workflows/ci-web.yml)
 
 **NISA・iDeCo・特定口座・一般口座を横断して、資産・損益・収益率を管理する資産管理サービス。**
 
@@ -110,7 +109,7 @@
 shisan-api/
 ├── compose.yaml              # Postgres + API
 ├── .env                      # Compose 用の環境変数（gitignore 対象）
-├── .github/workflows/        # CI / Deploy / CI (web) / Deploy web / Daily Snapshot
+├── .github/workflows/        # ci.yml / deploy.yml / snapshot.yml
 ├── web/                      # フロントエンド（Vite + React + TypeScript）
 │   ├── .node-version         # Node のバージョン（ローカル / CI / Render で共有）
 │   └── src/
@@ -127,7 +126,7 @@ shisan-api/
     ├── .env                  # sqlx CLI 用の DATABASE_URL（gitignore 対象）
     ├── .sqlx/                # オフラインクエリキャッシュ
     ├── migrations/           # sqlx マイグレーション
-    ├── docs/                 # タスクごとの設計メモ / openapi.json
+    ├── docs/                 # 設計メモ / 残タスク一覧 / openapi.json
     ├── tests/                # 統合テスト
     └── src/
         ├── main.rs           # clap CLI + axum 起動
@@ -221,7 +220,7 @@ GitHub Actions の `schedule` から HTTP で起動する方式なら、イン�
 
 Render の auto-deploy は `main` への push を検知して即座にビルドを始めるため、**テストの結果を待ちません**。テストが落ちるコードでもデプロイされてしまいます。
 
-auto-deploy を切り、GitHub Actions の `workflow_run` イベントで CI の完了と結果を受け取り、`main` ブランチかつ成功時に限って Deploy Hook を叩く構成にしました。CI が green のときだけデプロイが走ります。フロントエンドも同じ方式に揃えています。
+auto-deploy を切り、GitHub Actions の `workflow_run` イベントで統合 CI の完了と結果を受け取り、`main` ブランチかつ成功時に限って Deploy Hook を叩く構成にしました。CI が green のときだけ、同じ `deploy.yml` からバックエンドとフロントエンドをデプロイします。
 
 ### なぜ外部 API を trait で抽象化したのか
 
@@ -314,6 +313,12 @@ API は DB への接続後、`sqlx::migrate!()` でバイナリに埋め込ん�
 
 フロントエンドは認証トークンを付けたリクエストが 401 を返した場合、共通の API クライアントから `auth:expired` イベントを発火します。認証ストアがこのイベントを1箇所で購読してセッションを破棄するため、エンドポイントを追加しても個別のログアウト処理は不要です。
 
+`ApiError` は RFC 9457 の表示用情報と JSON 本文の原形を分けて保持します。CSV import の `ImportReport` のように Problem Details ではないエラー本文も、型を偽らず個別処理へ渡せます。
+
+### mutation 後のキャッシュ整合性を共通化する
+
+React Query のルートキーと失効処理を `web/src/lib/queryKeys.ts` に集約しています。取引、価格、口座、CSV import の変更後は、一覧だけでなく保有評価と分析結果もまとめて再取得し、画面間で古い評価額が残らないようにしています。
+
 ---
 
 ## Testing
@@ -329,25 +334,27 @@ cargo test --all-targets
 
 外部 API（Frankfurter）は `wiremock` でスタブ化し、正常系に加えて 5xx 応答・タイムアウト時のキャッシュフォールバックまでテストしています。
 
-認証では Argon2 の生成・検証、不正 PHC の拒否、旧 PHC との互換性、JWT の発行・検証を回帰テストに固定しています。
+認証では Argon2 の生成・検証、不正 PHC の拒否、旧 PHC との互換性に加え、JWT の発行・期限切れ・改ざん・異なる署名鍵・アルゴリズム不一致を回帰テストに固定しています。
 
 ---
 
 ## CI / CD
 
-バックエンドとフロントエンドで独立した2系統を持ち、`main` ではそれぞれの CI が通ったときだけ対応するデプロイが走ります。
+`ci.yml` と `deploy.yml` をそれぞれ1本に統合しています。`ci.yml` の backend / frontend 両ジョブが成功したときだけ、`deploy.yml` が両方の Render Deploy Hook を起動します。
 
 ```
 push / pull_request
         │
-        ├──→  CI  ─────────────────→  Deploy
-        │     fmt / clippy / test      Render Deploy Hook
-        │     cargo audit              （Web Service）
-        │     sqlx prepare --check
-        │
-        └──→  CI (web)  ───────────→  Deploy web
-              npm audit / lint          Render Deploy Hook
-              OpenAPI 型同期 / build    （Static Site）
+        └──→  ci.yml
+              ├── Backend (Rust)
+              │   fmt / clippy / test / cargo audit / sqlx prepare --check
+              └── Frontend (React)
+                  npm audit / lint / OpenAPI 型同期 / build
+                         │ 両ジョブ成功（main）
+                         ↓
+                    deploy.yml
+                      ├── Deploy backend（Render Web Service）
+                      └── Deploy frontend（Render Static Site）
 
 GitHub Actions cron（JST 07:00）
         └──→  Daily Snapshot
@@ -355,13 +362,11 @@ GitHub Actions cron（JST 07:00）
 
 | ワークフロー | トリガー | 内容 |
 |---|---|---|
-| CI | push（`main`, `feature/backend`）/ PR（`main`） | fmt / clippy / 全テスト / `cargo audit` / `sqlx prepare --check` |
-| Deploy | CI の成功（main のみ） | Render の Deploy Hook を起動（Web Service） |
-| CI (web) | push（`main`）/ PR | `npm audit` / lint / OpenAPI 生成型の同期確認 / check:schema / build |
-| Deploy web | CI (web) の成功（main のみ）/ 手動 | Render の Deploy Hook を起動（Static Site） |
-| Daily Snapshot | cron / 手動 | インスタンスを起こしてから `POST /snapshots/run` |
+| `ci.yml` | push / PR（`main`）、手動 | backend と frontend の検証を並列実行 |
+| `deploy.yml` | 統合 CI の成功（`main`）、手動 | backend / frontend の Render Deploy Hook を実行。手動時は対象を選択可能 |
+| `snapshot.yml` | cron / 手動 | インスタンスを起こしてから `POST /snapshots/run` |
 
-`main` のブランチ保護ではバックエンドとフロントエンドのチェックを必須にしています。ワークフローに `paths` フィルタを置くと、対象外の変更で必須チェックが起動せず `Expected` のまま止まるため、どちらの CI も PR ごとに実行します。
+`main` のブランチ保護では `Backend (Rust)` と `Frontend (React)` の両ジョブを必須にしています。`paths` フィルタは置かず、どちらのチェックも PR ごとに実行します。
 
 Dependabot は Cargo・npm・GitHub Actions を毎週確認し、minor / patch はグループ化、major は個別 PR として作成します。自動マージは行わず、破壊的変更の確認と CI を経て取り込みます。
 
@@ -490,23 +495,26 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | 項目 | 内容 |
 |---|---|
 | Dependabot | Cargo / npm / GitHub Actions の週次更新（minor / patch はグループ化） |
-| 認証依存更新 | `argon2 0.6` / `jsonwebtoken 11` 対応と旧 PHC 互換テスト |
-| CI / リポジトリ保護 | ブランチ保護、フロントエンド CI、`cargo audit` / `npm audit` |
+| 認証依存更新 | `argon2 0.6` / `jsonwebtoken 11` 対応、旧 PHC 互換・JWT 境界テスト |
+| CI / リポジトリ保護 | `ci.yml` / `deploy.yml` への統合、ブランチ保護、`cargo audit` / `npm audit` |
+| 認証・API 契約 | パスワード上限と denylist、401 セッション破棄、全 4xx / 5xx の OpenAPI schema 検証 |
 | ビルド再現性 | Rust toolchain の固定、builder / runtime の Debian 12 統一 |
+| クライアント整合性 | mutation 後の関連キャッシュ失効と、Problem Details 以外のエラー本文処理を共通化 |
 
 ---
 
 ## Future Work
 
+過去の設計メモに残った項目を現行コードと照合した完全版は [`asset-log/docs/remaining-tasks.md`](asset-log/docs/remaining-tasks.md) にまとめています。
+
 | 優先 | 項目 | 内容 |
 |---|---|---|
-| 1 | XIRR | 金額加重収益率。入金タイミングを考慮した実質的なパフォーマンス |
-| 2 | パスワード要件の強化 | 上限を Unicode 文字数で統一し、漏えい・頻出パスワードの拒否リストを追加 |
-| 3 | JWT 回帰テストの拡張 | 有効期限切れ、payload 改ざん、異なる署名鍵を拒否することを固定 |
-| 4 | OpenAPI エラー契約 | 全 4xx / 5xx が `ProblemDetails` を参照することを自動検証 |
-| 5 | Google ログイン（OIDC） | 現行の register / login + JWT の上に追加 |
-| 6 | ルート単位のコード分割 | 現状はバンドルが単一チャンク（742KB / gzip 214KB） |
-| 7 | コールドスタート対策 | 無料プランのスピンダウンにより初回リクエストが数十秒待たされる |
+| 1 | API エラー形式の統一 | axum の JSON rejection も Problem Details に変換する |
+| 2 | CSV の上限・性能 | サーバー側のサイズ / 行数上限と、行ごとの DB 往復を一括取得へ変更 |
+| 3 | 取引一覧のページング | API 既定100件を超える取引へ UI から到達可能にする |
+| 4 | XIRR | 入金タイミングを考慮した金額加重収益率を提供 |
+| 5 | Google ログイン（OIDC） | 現行 JWT 認証の上に追加し、Cookie / refresh token 方針も再検討 |
+| 6 | コールドスタート対策 | API 起動待ちを通常の通信中と区別して表示し、再試行を案内 |
 
 ---
 

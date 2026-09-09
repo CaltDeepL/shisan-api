@@ -35,8 +35,7 @@ export function EditAccountDialog({ account, onClose }: Props) {
   const [error, setError] = useState<unknown>(null);
   const [noChange, setNoChange] = useState(false);
 
-  // account が null でない間だけ id が確定する。hooks は常に呼ぶ必要があるので空文字で凌ぐ
-  const update = useUpdateAccount(account?.id ?? "");
+  const update = useUpdateAccount();
 
   useEffect(() => {
     const el = ref.current;
@@ -57,7 +56,7 @@ export function EditAccountDialog({ account, onClose }: Props) {
   const fieldErrors = apiError?.fieldErrors ?? {};
   const nameError =
     apiError?.status === 409
-      ? "同じ名前の口座が既に登録されています"
+      ? apiError.problem.detail
       : fieldErrors.name;
   const hasFieldError =
     apiError?.status === 409 || Object.keys(fieldErrors).length > 0;
@@ -79,7 +78,7 @@ export function EditAccountDialog({ account, onClose }: Props) {
     }
 
     try {
-      await update.mutateAsync(patch);
+      await update.mutateAsync({ id: account.id, body: patch });
       onClose();
     } catch (e) {
       setError(e);
