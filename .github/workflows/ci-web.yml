@@ -1,14 +1,13 @@
 name: CI (web)
-
 on:
   push:
     branches: [main]
     paths: ['web/**', '.github/workflows/ci-web.yml']
   pull_request:
     paths: ['web/**', '.github/workflows/ci-web.yml']
-
 jobs:
   build:
+    name: Frontend (React)      # ← ステータスチェック名を明示
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -16,11 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
+
         with:
           node-version-file: web/.node-version
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - run: npm audit --audit-level=moderate   
+      - name: Check generated API types are up to date
+        run: |
+          npm run gen:api
+          git diff --exit-code -- src/api/schema.d.ts
       - run: npm run lint
       - run: npm run check:schema
       - run: npm run build
