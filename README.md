@@ -505,7 +505,7 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 
 ## Future Work
 
-過去の設計メモに残った項目を現行コードと照合した完全版は [`asset-log/docs/remaining-tasks.md`](asset-log/docs/remaining-tasks.md) にまとめています。
+過去の設計メモと現行コードを横断した監査結果・残タスクの完全版は [`asset-log/docs/task-31-full-audit.md`](asset-log/docs/task-31-full-audit.md) にまとめています。
 
 | 優先 | 項目 | 内容 |
 |---|---|---|
