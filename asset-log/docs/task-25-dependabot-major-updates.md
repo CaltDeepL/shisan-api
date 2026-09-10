@@ -1,387 +1,419 @@
-# タスク #25: Dependabot major update 対応
+# タスク #25: CI/CD 運用の整備と Dependabot 対応
 
 ## 概要
 
-Dependabot 導入後に残っていた認証系の major update 2件を対応した。
+chess-app との比較で見つかった運用面の穴を塞ぎ、Dependabot を導入して最初の major update に対応した。
 
-| PR | 更新 | 主な破壊的変更 |
+| # | 項目 | 内容 |
 |---|---|---|
-| #34 | `argon2 0.5.3` → `0.6.0` | `SaltString` を使う旧 API が廃止され、`hash_password` の呼び出し形が変更 |
-| #29 | `jsonwebtoken 9.3.1` → `11.0.0` | crypto backend の明示が必要になり、未指定だと JWT 発行時に panic |
+| 1 | ブランチ保護 | main への直接 push を Ruleset で禁止 |
+| 2 | Rust バージョンの一元化 | `rust-toolchain.toml` + Docker の ABI 不一致修正 |
+| 3 | 依存の脆弱性監査 | `cargo audit` / `npm audit` を CI に追加 |
+| 4 | Dependabot | Cargo / npm / GitHub Actions の3系統 |
+| 5 | major update 対応 | `argon2 0.6` / `jsonwebtoken 11` |
 
-単に `Cargo.toml` のバージョンを上げるだけでは通らず、Argon2 の API 移行と
-jsonwebtoken の crypto backend 設定が必要だった。
+順序は **1 → 2 → 3 → 4 → 5**。設定だけで効果が出るものから着手し、コードに手が入るものを後回しにした。
 
-最初は `rust_crypto` を選択したが、CI に追加した `cargo audit` で
-`rsa 0.9.10` の `RUSTSEC-2023-0071` が検出されたため、最終的に
-`aws_lc_rs` backend へ変更した。
+---
 
-あわせて、認証系の regression test を既存構成に合わせて
-`asset-log/tests/auth_test.rs` に集約した。
+# 1. ブランチ保護
 
-## 構成
+## 見つかった穴
 
-### Cargo.toml
+README には「CI が green のときだけデプロイが走る」と書いてあり、`workflow_run` でその通りに実装されている。しかし **main への直接 push が可能だった**。
 
-認証関連の依存は最終的に次の形にした。
+守られているものと守られていないものを整理すると:
 
-```toml
-uuid = { version = "1", features = ["v4", "serde"] }
+| 守るもの | 仕組み | 状態 |
+|---|---|---|
+| CI が落ちた状態でデプロイされない | `workflow_run` | あった |
+| CI を通さないコードが main に入らない | ブランチ保護 | **無かった** |
 
-jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs"] }
-argon2 = "0.6"
+後者が無いと、レビューもテストも経ずに main が変わり、**CI が赤いまま放置される**。デプロイは止まるので本番は守られるが、main が壊れた状態になる。
 
-reqwest = { version = "0.12", default-features = false, features = [
-    "json",
-    "rustls-tls",
-    "http2",
-] }
-````
+## Classic ではなく Ruleset
 
-`argon2 0.6` では salt の生成を内部で行うため、以前使っていた
+| | Classic | Ruleset |
+|---|---|---|
+| 位置づけ | 旧方式 | 現行 |
+| 一時的な無効化 | 削除するしかない | **Active / Disabled を切り替えられる** |
 
-```toml
-rand_core = { version = "0.6", features = ["getrandom"] }
+緊急時にルールを外したいとき、Classic だと削除して作り直すことになる。
+
+## 設定
+
+| 項目 | 値 |
+|---|---|
+| Enforcement | Active |
+| Restrict deletions / Block force pushes | 有効 |
+| Require a pull request | 有効 |
+| └ Required approvals | **0** |
+| Require status checks | `fmt / clippy / test` / `Frontend (React)` |
+
+**Required approvals を 0 にするのが要点。** 1人開発では1以上にすると自分の PR を自分で承認できず、何もマージできなくなる。
+
+## 効いていることの確認
+
+```
+GH013: Repository rule violations found for refs/heads/main.
+- Changes must be made through a pull request.
+- Required status check "fmt / clippy / test" is expected.
 ```
 
-の直接依存は削除した。
+---
 
-`jsonwebtoken 11` は crypto backend の明示が必要なため、
-最終的に `aws_lc_rs` を選択した。
+# 2. Rust バージョンの一元化と Docker の ABI 不一致
 
-`use_pem` は使用していないため `default-features = false` にしている。
+## rust-toolchain.toml
+
+バージョンを `ci.yml`（`toolchain: "1.96.0"`）と `Dockerfile`（`FROM rust:1.96-slim`）の2箇所で指定していた。今は一致しているが、**片方だけ上げれば乖離する**。
+
+chess-app では同じ構造で乖離が起き、依存の MSRV が上がったときに **テストも CI も緑のまま本番のビルドだけが落ちた**。
+
+```toml
+# asset-log/rust-toolchain.toml
+[toolchain]
+channel = "1.96.0"
+components = ["rustfmt", "clippy"]
+```
+
+`ci.yml` から `dtolnay/rust-toolchain` のステップを削除した。ランナーには rustup が入っており、`cargo` の初回実行時にこのファイルを読んで自動で入る。**アクションを残してバージョンを書くと2箇所のままで、一元化の意味がなくなる。**
+
+`components` はファイル側で指定しないと `cargo fmt` / `cargo clippy` が見つからない。
+
+## Docker の COPY 位置
+
+```dockerfile
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release
+```
+
+**`cargo build` より前に置くことが必須。** chess-app では末尾に追加してしまい、ビルドの後にコピーされてまったく効いていなかった（ログの `builder 8/9` の後に `9/9` で気づいた）。
+
+## builder / runtime の OS 世代不一致
+
+chess-app で GLIBC のエラーが出たため、shisan-api も確認した。
+
+```bash
+docker run --rm rust:1.96-slim cat /etc/os-release | grep VERSION_CODENAME
+# VERSION_CODENAME=trixie
+```
+
+| | ベース OS |
+|---|---|
+| builder: `rust:1.96-slim` | **trixie** |
+| runtime: `gcr.io/distroless/cc-debian12` | **bookworm** |
+
+**`-slim` は軽量化を意味するだけで、OS 世代を固定しない。** GLIBC は前方互換のみなので、ビルド環境のほうが新しいと実行環境でシンボルが解決できない。
+
+```diff
+- FROM rust:1.96-slim AS builder
++ FROM rust:1.96-slim-bookworm AS builder
+```
+
+**まだ壊れていなかっただけで、リスクは同じだった。** chess-app では実際に本番が5回連続で起動失敗していた。
+
+## BuildKit の cache mount を外した
+
+`-slim-bookworm` に変更したところ、次のエラーが出た。
+
+```
+error[E0463]: can't find crate for `asset_log`
+error[E0463]: can't find crate for `sqlx`
+```
+
+原因は `--mount=type=cache,target=/app/target` と「ダミー src を消して本物をコピー」の組み合わせ。
+
+| 方式 | 状態の持ち方 |
+|---|---|
+| BuildKit cache mount | レイヤーの外。**Docker が内容を追跡しない** |
+| Docker レイヤーキャッシュ | レイヤーそのもの。COPY の内容が変われば無効化される |
+
+cache mount は速いが、**Docker が「このキャッシュがどのソースに対応するか」を知らない**ため、ダミー src でビルドした成果物が本物のビルドに紛れ込む。レイヤーキャッシュに戻した。
+
+## 確認手順
+
+```bash
+docker compose build --no-cache api
+docker compose up -d --force-recreate api
+curl -f http://localhost:8080/health
+# {"status":"ok"}
+```
+
+**この順序でないと検証にならない。** ビルドが失敗していても、古いイメージが起動して `/health` が通ってしまう。
+
+あわせて、使っていない `pkg-config` / `libssl-dev` を builder から削除した（`grep -n "openssl\|native-tls" Cargo.toml Cargo.lock` が空）。
+
+---
+
+# 3. 依存の脆弱性監査
+
+## Dependabot との違い
+
+| | 契機 | 対象 |
+|---|---|---|
+| Dependabot version updates | 新しいバージョンが出たとき | 直接依存 |
+| Dependabot security updates | 脆弱性が公開されたとき | 直接・推移的依存 |
+| `cargo audit`（CI） | **push / PR のたび** | `Cargo.lock` 全体 |
+
+**3つ目の価値は「今この時点の lock ファイルが安全か」を毎回確認できること。** Dependabot は PR を出すだけなので、放置すれば脆弱なまま。
+
+## 導入時に見つかった脆弱性
+
+```
+RUSTSEC-2026-0258  h2 0.4.15    → 0.4.16 以上
+RUSTSEC-2026-0235  rkyv 0.7.46  → 0.8.17 以上
+RUSTSEC-2024-0436  paste 1.0.15 unmaintained（警告）
+                   chacha20 0.10.1 yanked（警告）
+```
+
+`cargo update` で3件とも解消した。
+
+| crate | 対処 |
+|---|---|
+| `h2` | `cargo update -p h2` で 0.4.19 へ |
+| `rkyv` | **依存グラフから参照されておらず、lock にだけ残っていた**。`cargo update` で削除 |
+| `chacha20` | sqlx 経由。`cargo update` で 0.10.2 へ |
+
+**`rkyv` は chess-app の `rsa` と同じ形だが結果が違った。** あちらは `sqlx-mysql` が実際に参照していたので消えず、こちらは参照が無かったので消えた。`cargo tree` が「nothing to print」でも、消えるとは限らない。
+
+`paste` は `utoipa-axum` 経由で対処できないが、**unmaintained は cargo audit の既定では失敗扱いにならない**ため `audit.toml` は不要だった。
+
+## CI への追加
+
+```yaml
+      - name: Security audit
+        run: |
+          command -v cargo-audit >/dev/null || cargo install cargo-audit --locked
+          cargo audit
+```
+
+**`command -v` での存在確認が必須。** これを付けずに `cargo install` だけを書くと、キャッシュから復元されたときに失敗する。
+
+```
+error: binary `cargo-audit` already exists in destination
+Add --force to overwrite
+Error: Process completed with exit code 101
+```
+
+**初回は緑で、キャッシュが効き始めた2回目から壊れる**ため、導入直後には気づけなかった。Dependabot の PR が全部赤くなって発覚した。
+
+## バイナリのキャッシュ
+
+`cargo install` 系が CI 時間の大半を占めていた。
+
+| ステップ | 前 | 後 |
+|---|---|---|
+| Security audit | 2m 45s | **4s** |
+| Install sqlx-cli | 1m 4s | **0s** |
+| Clippy | 57s | 6s |
+| Test | 1m 41s | 56s |
+| **合計** | **7m 21s** | **1m 59s** |
+
+```yaml
+      - name: Cache cargo binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin
+          key: cargo-bin-${{ runner.os }}-audit0.22.2-sqlx0.9.0
+```
+
+**キーにバージョンを含めるのが要点。** これがないと、バージョンを上げてもキャッシュが使われ続け、古いバイナリで検査することになる。
+
+Clippy と Test も速くなっているのは `Swatinem/rust-cache` の効果で、ビルド成果物全体が効いている。
+
+---
+
+# 4. Dependabot
+
+## 設定
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/asset-log"
+    # ...
+    groups:
+      cargo-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "npm"
+    directory: "/web"
+    # ...
+    groups:
+      types:
+        patterns: ["@types/*"]
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+```
+
+**グループ化が要点。** Dependabot は既定で依存ごとに PR を立てるため、個別だと週に10本以上になる。数が多いと結局まとめて放置され、**「更新の自動化」を入れたのに更新が滞る**。
+
+major はグループに含めない。1本の PR に破壊的変更が複数混ざると、落ちたときにどれが原因か分からない。
+
+**chess-app と違い ESLint のグループ化は不要。** shisan-api は `oxlint` 単体で、プラグイン群が連動する問題がない。
+
+## 初回の結果
+
+8本の PR が来た。3系統すべてから提案されている。
+
+| PR | 判断 |
+|---|---|
+| #35 typescript 6→7 | **上げた**（`oxlint` は TS バージョンに依存しない） |
+| #33 @types/node | マージ |
+| #32 tower-http 0.6→0.7 | マージ |
+| #30 npm-minor-patch (4件) | マージ |
+| #28 actions group (3件) | マージ |
+| #34 argon2 0.5→0.6 | 対応（後述） |
+| #29 jsonwebtoken 9→11 | 対応（後述） |
+| #31 axum-extra 0.10→0.12 | 対応 |
+
+**#35 は chess-app では見送った項目。** あちらは `typescript-eslint` が TS 7.0 に未対応で lint が起動しなくなるため見送ったが、shisan-api は `oxlint` を使っているので影響を受けない。**同じ更新でも、周辺のツール構成で判断が変わる。**
+
+---
+
+# 5. major update 対応（argon2 / jsonwebtoken）
+
+## 変更内容
+
+```toml
+jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs"] }
+argon2 = "0.6"
+```
+
+`argon2 0.6` では salt の生成を内部で行うため、`rand_core` の直接依存を削除した。
 
 ### Argon2
 
-0.5 系ではアプリ側で salt を生成していた。
-
-```rust
-let salt = SaltString::generate(&mut OsRng);
-
-Argon2::default()
-    .hash_password(plain.as_bytes(), &salt)
+```diff
+- let salt = SaltString::generate(&mut OsRng);
+- Argon2::default().hash_password(plain.as_bytes(), &salt)
++ Argon2::default().hash_password(plain.as_bytes())
 ```
 
-0.6 では `hash_password` が salt を内部生成するため、次の形に変更した。
+`PasswordHash` は `password_hash::phc::PasswordHash` に移動している。
 
-```rust
-Argon2::default()
-    .hash_password(plain.as_bytes())
-    .map(|h| h.to_string())
-```
-
-最終的な `password.rs` では `rand_core::OsRng` と `SaltString` を使用しない。
-
-```rust
-use argon2::Argon2;
-use argon2::password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash};
-use std::sync::LazyLock;
-
-/// ユーザー不在時に検証を空回しするためのダミー。
-/// 起動時に1回だけ計算する。
-static DUMMY_HASH: LazyLock<String> = LazyLock::new(|| {
-    hash_password("dummy-password-for-timing-equalization")
-        .expect("ダミーハッシュの生成に失敗")
-});
-
-pub fn hash_password(plain: &str) -> anyhow::Result<String> {
-    Argon2::default()
-        .hash_password(plain.as_bytes())
-        .map(|h| h.to_string())
-        .map_err(|e| anyhow::anyhow!("password hashing failed: {e}"))
-}
-
-pub fn verify_password(plain: &str, hash: &str) -> bool {
-    match PasswordHash::new(hash) {
-        Ok(parsed) => Argon2::default()
-            .verify_password(plain.as_bytes(), &parsed)
-            .is_ok(),
-        Err(_) => false,
-    }
-}
-```
-
-既存の `verify_dummy` / `warmup` はそのまま維持している。
+**salt の生成を呼び出し側に書かせない設計への変更**で、salt の使い回しや乱数源の誤りといった事故が構造的に起きなくなる。
 
 ### jsonwebtoken
 
-`jsonwebtoken 11` では crypto backend を明示しないと、
-compile 自体は通っても JWT 発行時に panic する。
+v11 では crypto backend を明示しないと、**compile は通っても JWT 発行時に panic する**。
 
-Dependabot PR #29 では integration test で JWT を発行した際に、
-provider を自動決定できないという runtime error が発生した。
+当初 `rust_crypto` を選択したが、CI の `cargo audit` で `rsa 0.9.10` の RUSTSEC-2023-0071（修正版なし）が検出された。HS256 しか使っておらず RSA JWT は使用していないが、**修正版のない advisory を allowlist して残すより、別 backend に切り替える**方針を採った。
 
-対策として、アプリ起動コードから `CryptoProvider::install_default()` を呼ぶのではなく、
-依存定義側で backend を一意に決める方針にした。
-
-当初は次の設定を採用した。
-
-```toml
-jsonwebtoken = { version = "11", default-features = false, features = ["rust_crypto"] }
+```diff
+- features = ["rust_crypto"]
++ features = ["aws_lc_rs"]
 ```
 
-この設定で JWT の issue / verify は正常に動作したが、
-CI の `cargo audit` で `rust_crypto` 側から入る `rsa 0.9.10` に
-`RUSTSEC-2023-0071` が検出された。
+**chess-app では逆の判断をした。** あちらは `aws_lc_rs` の C++ ビルドを避けて `rust_crypto` を選び、`rsa` は `sqlx-mysql` 経由でも入るため `audit.toml` で ignore した。shisan-api は `rsa` の経路が `rust_crypto` だけだったので、backend を変えれば消える。**同じ問題でも、依存グラフの形で最善手が変わる。**
 
-修正版が存在しない advisory だったため、警告を ignore して CI を通すのではなく、
-backend を `aws_lc_rs` へ変更した。
+## 追加したテスト
 
-```toml
-jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs"] }
+`tests/auth_test.rs` に4件。
+
+| テスト | 確認内容 |
+|---|---|
+| `password_hash_and_verify_round_trip` | 新規 hash が検証でき、誤パスワードを拒否する |
+| `password_verifies_legacy_phc_hash` | **旧 Argon2 PHC 文字列を 0.6 でも検証できる** |
+| `password_rejects_malformed_hash` | 不正な PHC 文字列を拒否する |
+| `jwt_issue_and_verify_round_trip` | JWT 発行・検証が panic せず通る |
+
+**2つ目が最重要。** ハッシュ形式が変わると既存ユーザー全員がログインできなくなる。新規 hash の round trip だけでは、**生成側も検証側も同じ実装になるため互換性を検証できない**。固定の PHC fixture を埋め込んでいる。
+
+4つ目は `cargo check` では検出できない runtime の問題を守る。**依存更新では compile green だけでなく、対象ライブラリの主要 runtime path まで実際に通す必要がある。**
+
+---
+
+# つまずいた点
+
+## 依存を消した状態で `cargo update -p` を実行した
+
+`Cargo.toml` から `argon2` / `jsonwebtoken` が抜けた状態で `cargo update -p argon2 --precise 0.6.0` を実行したところ、Cargo は「現在の dependency graph では不要」と判断して lock から削除した。
+
 ```
-
-HS256 を使う既存の `JwtKeys` の公開 API と `jwt.rs` のロジックは変更していない。
-
-### テスト配置
-
-このリポジトリでは integration test を `asset-log/tests/` に集約しているため、
-今回も `src/auth/*.rs` に `#[cfg(test)] mod tests` は置かず、
-`tests/auth_test.rs` を追加した。
-
-```text
-asset-log/
-├── src/
-│   └── auth/
-│       ├── password.rs
-│       └── jwt.rs
-└── tests/
-    └── auth_test.rs
-```
-
-追加したテストは4件。
-
-| テスト                                   | 確認内容                                    |
-| ------------------------------------- | --------------------------------------- |
-| `password_hash_and_verify_round_trip` | 新規 hash が正常に検証でき、誤パスワードを拒否する            |
-| `password_verifies_legacy_phc_hash`   | 旧 Argon2 PHC 文字列を 0.6 でも検証できる           |
-| `password_rejects_malformed_hash`     | 不正な PHC 文字列を拒否する                        |
-| `jwt_issue_and_verify_round_trip`     | jsonwebtoken 11 で JWT 発行・検証が panic せず通る |
-
-パスワードハッシュは DB に永続化されるため、
-新規 hash の生成だけでなく既存 PHC 文字列の互換性も regression test に固定した。
-
-## つまずいた点
-
-### Cargo.toml から argon2 / jsonwebtoken を消した状態で cargo update を実行した
-
-修正途中で `Cargo.toml` から `argon2` / `jsonwebtoken` の依存定義が抜けた状態になった。
-
-その状態で
-
-```bash
-cargo update -p argon2 --precise 0.6.0
-```
-
-を実行したところ、Cargo は更新ではなく
-「現在の dependency graph では不要」と判断し、旧 package を `Cargo.lock` から削除した。
-
-実際の出力では次のようになった。
-
-```text
 Removing argon2 v0.5.3
 Removing jsonwebtoken v9.3.1
 ```
 
-続けて同じコマンドを実行すると、
+**`cargo update -p` は dependency を追加するコマンドではなく、既に graph に存在する package の解決を更新するコマンド。**
 
-```text
-error: package ID specification `argon2` did not match any packages
+## argon2 0.5 / 0.6 のコードを混在させた
+
+import だけ 0.6 向けに変えて、旧 API の salt 生成を残してしまった。
+
 ```
-
-になった。
-
-`cargo update -p` は dependency を追加するコマンドではなく、
-すでに dependency graph に存在する package の lockfile 解決を更新するコマンド。
-
-先に `Cargo.toml` へ直接依存を戻し、その後 Cargo に dependency resolution を行わせた。
-
-今後 major update を手動対応するときは、
-`cargo update -p` の前に `Cargo.toml` の直接依存が残っているかを確認する。
-
-### argon2 0.5 / 0.6 のコードを混在させた
-
-最初の修正では import の一部を 0.6 向けに変更した一方で、
-旧 API のコードを残してしまった。
-
-```rust
-use rand_core::OsRng;
-
-let salt = SaltString::generate(&mut OsRng);
-```
-
-一方 `Cargo.toml` から `rand_core` は削除していたため、
-次の compile error になった。
-
-```text
 error[E0432]: unresolved import `rand_core`
 error[E0433]: cannot find type `SaltString` in this scope
 ```
 
-原因は、Argon2 0.6 への移行を import だけの変更として扱い、
-旧 salt 生成処理を消し切れていなかったこと。
+**major update では compile error が出た行だけを逐次直すのではなく、旧 API に依存している一連の処理をまとめて置き換える。**
 
-修正後は `OsRng` / `SaltString` を完全に削除し、0.6 の API に統一した。
+## CI のワークフローが2系統あることに気づかなかった
 
-```rust
-Argon2::default()
-    .hash_password(plain.as_bytes())
-```
-
-major update では compile error が出た行だけを逐次直すのではなく、
-旧 API に依存している一連の処理をまとめて置き換える必要がある。
-
-### jsonwebtoken 11 は compile が通っても runtime で落ちる
-
-PR #29 は compile / Clippy までは通ったが、
-integration test で JWT を発行した時点で runtime error になった。
-
-原因は jsonwebtoken 11 で crypto backend が暗黙選択されなくなったこと。
-
-この種の変更は `cargo check` だけでは検出できないため、
-JWT の issue / verify を実際に通す regression test を追加した。
-
-依存更新では compile green だけでなく、
-対象ライブラリの主要 runtime path までテストする必要がある。
-
-### rust_crypto では cargo audit が失敗した
-
-jsonwebtoken 11 の provider 問題を解消するため、
-当初は `rust_crypto` backend を指定した。
-
-JWT の実行テスト自体は通ったが、CI の Security audit で次の vulnerability が検出された。
-
-```text
-Crate:   rsa
-Version: 0.9.10
-Title:   Marvin Attack: potential key recovery through timing sidechannels
-ID:      RUSTSEC-2023-0071
-Severity: 5.9 (medium)
-Solution: No fixed upgrade is available
-```
-
-現在のアプリは HS256 を利用しており RSA JWT を使用していないが、
-`rust_crypto` feature により `rsa` crate が dependency graph に含まれていた。
-
-修正版のない vulnerability を allowlist して残すより、
-利用可能な別 backend に切り替える方針を採用した。
-
-```toml
-jsonwebtoken = { version = "11", default-features = false, features = ["aws_lc_rs"] }
-```
-
-変更後に CI を再実行し、Security audit を含めて green になった。
-
-### cargo audit の unmaintained warning は vulnerability と分けて扱う
-
-Security audit では `paste 1.0.15` に対する unmaintained warning も表示された。
-
-```text
-Crate:   paste
-Version: 1.0.15
-Warning: unmaintained
-Title:   paste - no longer maintained
-ID:      RUSTSEC-2024-0436
-```
-
-これは CI で allowed warning として扱われており、
-今回の exit code 1 の原因ではなかった。
-
-今回の blocking issue は `rsa 0.9.10 / RUSTSEC-2023-0071` の vulnerability だったため、
-warning と vulnerability を分けて診断した。
-
-## 副次的な修正
-
-### rand_core の直接依存を削除
-
-argon2 0.5 時代は salt 生成のため `rand_core::OsRng` を直接使っていたが、
-0.6 では不要になった。
-
-そのため `Cargo.toml` から直接依存を削除した。
-
-結果として、アプリコード側で乱数生成の具体実装を持たず、
-Argon2 crate の API に任せる形になった。
-
-### 認証テストを tests/auth_test.rs に集約
-
-当初は `password.rs` / `jwt.rs` に `#[cfg(test)] mod tests` を置いていたが、
-既存リポジトリでは `accounts_test.rs`、`analytics_test.rs`、
-`openapi_test.rs` などを `tests/` にまとめている。
-
-今回のテストは private helper を直接触る必要がなく、
-公開 API だけで検証できるため、既存方針に合わせて `tests/auth_test.rs` に移した。
-
-`src` 配下は実装、`tests` 配下は外部から見た regression test、
-という境界が明確になった。
-
-### 旧 PHC 互換性を固定
-
-依存更新後も既存ユーザーの保存済み password hash が使えることを確認するため、
-Argon2id v19 の固定 PHC fixture を追加した。
-
-新規 hash の round trip だけでは既存 DB の認証データ互換性までは保証できないため、
-major update の regression として残している。
-
-### Security audit を CI に追加
-
-依存の major update を compile / test だけで判断しないよう、
-CI に `cargo audit` を追加した。
-
-```yaml
-- name: Security audit
-  run: |
-    command -v cargo-audit >/dev/null || cargo install cargo-audit --locked
-    cargo audit
-```
-
-今回 `rust_crypto` から入った `rsa` vulnerability を merge 前に検出できたため、
-依存更新に対する防波堤として実際に機能した。
-
-## 検証項目
-
-| #  | 確認                                          | 結果                            |
-| -- | ------------------------------------------- | ----------------------------- |
-| 1  | `argon2 v0.6.0` が compile される               | OK                            |
-| 2  | `jsonwebtoken v11.0.0` が compile される        | OK                            |
-| 3  | jsonwebtoken の backend が `aws_lc_rs` に固定される | OK                            |
-| 4  | 新規 password hash → verify が通る               | OK                            |
-| 5  | 誤パスワードを拒否する                                 | OK                            |
-| 6  | 旧 Argon2 PHC を 0.6 で検証できる                   | OK                            |
-| 7  | malformed PHC を拒否する                         | OK                            |
-| 8  | JWT issue → verify が panic せず通る             | OK                            |
-| 9  | `cargo fmt --all -- --check`                | OK                            |
-| 10 | `cargo clippy --all-targets -- -D warnings` | OK                            |
-| 11 | `cargo test --all-targets`                  | OK（107 tests）                 |
-| 12 | `cargo audit`                               | OK（blocking vulnerability なし） |
-| 13 | PR #38 の CI                                 | OK                            |
-| 14 | main merge 後の CI                            | OK                            |
-
-ローカルでは認証テスト4件を含む全107テストが通った。
-
-```text
-test password_rejects_malformed_hash ... ok
-test jwt_issue_and_verify_round_trip ... ok
-test password_verifies_legacy_phc_hash ... ok
-test password_hash_and_verify_round_trip ... ok
-```
-
-最終的に PR #38 を main へ merge し、merge 後の main CI まで green を確認した。
-
-## 残課題
-
-| 項目                     | 内容                                                              |
-| ---------------------- | --------------------------------------------------------------- |
-| JWT expiry             | 有効期限切れ token の拒否テストを追加したい                                       |
-| JWT tamper             | payload 改ざん token の拒否を regression test にしたい                     |
-| wrong signing secret   | 別 secret で署名された token を拒否することを固定したい                             |
-| パスワード要件                | Unicode 文字数、byte 上限、common-password denylist を追加したい             |
-| 起動時 migration          | `sqlx::migrate!()` を起動時に実行し、ローカル / 本番だけ migration 漏れで壊れる状態を防ぎたい |
-| OpenAPI error contract | 全 4xx / 5xx が `ProblemDetails` を返すか自動検証したい                      |
-| フロント 401               | API wrapper で 401 を一元検知し、認証切れ時の logout / redirect を統一したい        |
-
-今回の `auth_test.rs` は Dependabot major update の破壊的変更を防ぐための最小 regression。
-
-認証仕様そのものの強化は別タスクに分離する。
+`ci.yml` だけを見て「フロントエンドは CI で検証されていない」と判断し、`frontend` ジョブを追加した。実際には `ci-web.yml` が最初から存在していた。
 
 ```
+ci-web.yml（CI (web)）→ deploy-web.yml → Render Static Site
+ci.yml（CI）          → deploy.yml     → Render Web Service
 ```
+
+**`.github/workflows/` の中身を確認せずに判断した。** 結果として同じ検査が二重に走っている。
+
+## `cargo install` がキャッシュと衝突した
+
+前述のとおり、**初回は緑で2回目から壊れる**タイプの不具合。導入した PR では気づけず、Dependabot の PR が全部赤くなって発覚した。
+
+**キャッシュを入れたら、キャッシュが効く状態で1回試す。** 初回の実行はキャッシュ保存であって、動作確認にはならない。
+
+---
+
+# 検証項目
+
+| # | 確認 | 結果 |
+|---|---|---|
+| 1 | main への直接 push が拒否される | OK |
+| 2 | `rustup show` に rust-toolchain.toml が表示される | OK |
+| 3 | builder / runtime の Debian 世代が一致 | OK（bookworm） |
+| 4 | `docker compose build --no-cache` → `/health` | OK |
+| 5 | `cargo audit` exit code 0 | OK |
+| 6 | `npm audit` 0 vulnerabilities | OK |
+| 7 | CI 時間 7m21s → 1m59s | OK |
+| 8 | Dependabot 3系統から PR | OK |
+| 9 | 旧 Argon2 PHC を 0.6 で検証できる | OK |
+| 10 | JWT issue → verify が panic せず通る | OK |
+| 11 | `cargo test --all-targets` | OK（107 tests） |
+| 12 | main merge 後の CI | OK |
+
+---
+
+# 残課題
+
+## 運用
+
+| 項目 | 内容 |
+|---|---|
+| **ワークフローの重複** | `ci.yml` の frontend ジョブと `ci-web.yml` が同じ検査をしている。**`deploy-web.yml` は `CI (web)` を待っている**ため、検査とデプロイのトリガーがずれている。統合が必要 |
+| `paths` フィルタとブランチ保護 | `paths` があると起動しないジョブのステータスチェックが待ち状態になる。フィルタを外すか、スキップ時も成功を返す仕組みが要る |
+| Require branches to be up to date | Dependabot の PR で毎回 `Update branch` が必要になる。PR が多いと手間 |
+| デプロイ失敗の検知 | chess-app では本番が5回連続で壊れていたのに気づけなかった。Render の Webhook 等で通知したい |
+| `sqlx-cli` のバージョン | `ci.yml` に直書き。`sqlx` 本体を上げたら手で合わせる（キャッシュキーにも含まれる） |
+
+## 認証仕様
+
+| 項目 | 内容 |
+|---|---|
+| JWT expiry | 有効期限切れ token の拒否テスト |
+| JWT tamper | payload 改ざん token の拒否 |
+| wrong signing secret | 別 secret で署名された token の拒否 |
+| パスワード要件 | **文字数で数える**（`str::len()` はバイト数）、上限（無いと Argon2 が DoS の入口）、denylist |
+| 起動時 migration | `sqlx::migrate!()` を起動時に実行。`#[sqlx::test]` は毎回専用DBに全マイグレーションを当てるため、**テストは緑のままローカル・本番だけ壊れる** |
+| OpenAPI error contract | 全 4xx/5xx が `ProblemDetails` を返すか自動検証 |
+| フロント 401 | API wrapper で一元検知し、logout / redirect を統一 |
+
+今回の `auth_test.rs` は Dependabot major update の破壊的変更を防ぐための最小 regression。認証仕様そのものの強化は別タスクに分離する。
