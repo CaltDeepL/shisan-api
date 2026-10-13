@@ -7,26 +7,38 @@ import {
   type CreateAccountRequest,
   type UpdateAccountRequest,
 } from "@/api/accounts";
-
-export const accountsKey = ["accounts"] as const;
+import { invalidateQueryRoots, queryKeys } from "@/lib/queryKeys";
 
 export function useAccounts() {
-  return useQuery({ queryKey: accountsKey, queryFn: listAccounts });
+  return useQuery({ queryKey: queryKeys.accounts, queryFn: listAccounts });
 }
 
 export function useCreateAccount() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateAccountRequest) => createAccount(body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: accountsKey }),
+    onSuccess: () =>
+      invalidateQueryRoots(
+        qc,
+        queryKeys.accounts,
+        queryKeys.holdings,
+        queryKeys.analytics,
+      ),
   });
 }
 
-export function useUpdateAccount(id: string) {
+export function useUpdateAccount() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: UpdateAccountRequest) => updateAccount(id, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: accountsKey }),
+    mutationFn: ({ id, body }: { id: string; body: UpdateAccountRequest }) =>
+      updateAccount(id, body),
+    onSuccess: () =>
+      invalidateQueryRoots(
+        qc,
+        queryKeys.accounts,
+        queryKeys.holdings,
+        queryKeys.analytics,
+      ),
   });
 }
 
@@ -34,6 +46,12 @@ export function useDeleteAccount() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteAccount(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: accountsKey }),
+    onSuccess: () =>
+      invalidateQueryRoots(
+        qc,
+        queryKeys.accounts,
+        queryKeys.holdings,
+        queryKeys.analytics,
+      ),
   });
 }

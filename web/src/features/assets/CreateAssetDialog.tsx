@@ -5,7 +5,8 @@ import { Field } from "@/components/Field";
 import { FormError } from "@/components/FormError";
 import { buildCreateAsset, type AssetClass } from "@/api/assets";
 import { useCreateAsset } from "./queries";
-import { assetClassLabels, assetClassOptions, currencyOptions } from "./labels";
+import { currencyOptions } from "@/lib/currencies";
+import { assetClassLabels, assetClassOptions } from "./labels";
 
 type Props = {
   open: boolean;

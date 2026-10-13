@@ -3,15 +3,31 @@ import type { components } from "./schema";
 export type FieldError = components["schemas"]["FieldError"];
 export type ProblemDetails = Partial<components["schemas"]["ProblemDetails"]>;
 
+function isProblemDetails(value: unknown): value is ProblemDetails {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.status === "number" ||
+    typeof candidate.title === "string" ||
+    typeof candidate.detail === "string"
+  );
+}
+
 /** API が返したエラーを表す例外。status 0 はネットワーク到達不能。 */
 export class ApiError extends Error {
   readonly status: number;
+  /** JSON エラー本文の原形。ImportReport など ProblemDetails 以外も保持する。 */
+  readonly body: unknown;
   readonly problem: ProblemDetails;
 
-  constructor(status: number, problem: ProblemDetails) {
+  constructor(status: number, body: unknown) {
+    const problem = isProblemDetails(body)
+      ? body
+      : { status, title: `HTTP ${status}` };
     super(problem.detail ?? problem.title ?? `HTTP ${status}`);
     this.name = "ApiError";
     this.status = status;
+    this.body = body;
     this.problem = problem;
   }
 

@@ -17,6 +17,3 @@ export const assetClassLabels: Record<AssetClass, string> = {
   cash: "現金",
   other: "その他",
 };
-
-/** 通貨は自由入力をやめてこの2択にする（#19 引き継ぎ 6.3） */
-export const currencyOptions = ["JPY", "USD"] as const;

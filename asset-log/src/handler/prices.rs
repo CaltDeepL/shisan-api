@@ -127,7 +127,7 @@ pub async fn upsert_prices(
     let upserted = price_repo::upsert_many(&state.db, user.0, req.asset_id, &rows, source).await?;
 
     if upserted == 0 {
-        return Err(AppError::NotFound("asset not found"));
+        return Err(AppError::NotFound("銘柄"));
     }
 
     Ok(Json(UpsertPricesResponse { upserted }))
@@ -156,7 +156,7 @@ pub async fn get_price_history(
         .await?
         .is_none()
     {
-        return Err(AppError::NotFound("asset not found"));
+        return Err(AppError::NotFound("銘柄"));
     }
 
     let prices = price_repo::history(&state.db, user.0, asset_id, q.from, q.to).await?;

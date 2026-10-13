@@ -164,7 +164,7 @@ pub async fn get_asset(
     asset_repo::find(&state.db, user.0, id)
         .await?
         .map(|a| Json(a.into()))
-        .ok_or(AppError::NotFound("asset not found"))
+        .ok_or(AppError::NotFound("銘柄"))
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -236,5 +236,5 @@ pub async fn patch_asset(
     asset_repo::update(&state.db, user.0, id, patch)
         .await?
         .map(|a| Json(a.into()))
-        .ok_or(AppError::NotFound("asset not found"))
+        .ok_or(AppError::NotFound("銘柄"))
 }

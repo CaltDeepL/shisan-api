@@ -1,4 +1,4 @@
-import { ApiError, type ProblemDetails } from "./problem";
+import { ApiError } from "./problem";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 if (!BASE) throw new Error("VITE_API_BASE_URL が未設定のままビルドされています");
@@ -18,11 +18,11 @@ type RequestOptions = {
   auth?: boolean;
 };
 
-async function readProblem(res: Response): Promise<ProblemDetails> {
+async function readErrorBody(res: Response): Promise<unknown> {
   const ct = res.headers.get("content-type") ?? "";
   if (ct.includes("json")) {
     try {
-      return (await res.json()) as ProblemDetails;
+      return await res.json();
     } catch {
       /* 本文が壊れている場合は下へ */
     }
@@ -60,7 +60,7 @@ export async function apiFetch<T>(
     window.dispatchEvent(new Event(AUTH_EXPIRED));
   }
 
-  if (!res.ok) throw new ApiError(res.status, await readProblem(res));
+  if (!res.ok) throw new ApiError(res.status, await readErrorBody(res));
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }

@@ -447,7 +447,7 @@ async fn delete_recalculates_position(db: PgPool) {
     assert_eq!(list.as_array().expect("array").len(), 2);
 
     // 消した取引の再取得は404
-    let (status, _) = request(
+    let (status, problem) = request(
         &app,
         Method::GET,
         &format!("/transactions/{second_id}"),
@@ -456,6 +456,7 @@ async fn delete_recalculates_position(db: PgPool) {
     )
     .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
+    assert_eq!(problem["detail"], "取引が見つかりません");
 }
 
 #[sqlx::test]

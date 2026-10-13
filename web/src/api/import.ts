@@ -54,11 +54,11 @@ export function countDataRows(csv: string): number {
 export const CSV_TEMPLATE_HEADER =
   "account,symbol,kind,quantity,price,fee,traded_at,note,external_id";
 
-  /** 422 の本文が ImportReport なら握り、それ以外の ApiError は投げ直す */
+/** 422 の本文が ImportReport なら握り、それ以外の ApiError は投げ直す */
 function unwrapReport(err: unknown): ImportReport | null {
   if (!(err instanceof ApiError)) return null;
   if (err.status !== 422) return null;
-  return isImportReport(err.problem) ? err.problem : null;
+  return isImportReport(err.body) ? err.body : null;
 }
 
 /** 検証のみ。エラーがあっても 200 で ImportReport が返る */

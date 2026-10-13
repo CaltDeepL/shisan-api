@@ -1,5 +1,7 @@
 # タスク #24: Render Static Site へのフロントエンドデプロイ
 
+> **現行構成（2026-09-10）:** この文書は実装当時の記録です。その後、backend / frontend の CI は `.github/workflows/ci.yml`、両デプロイは `.github/workflows/deploy.yml` に統合されました。`ci-web.yml` と `deploy-web.yml` は削除済みです。
+
 ## 概要
 
 `web/` の React SPA を Render Static Site として本番公開し、既存の
