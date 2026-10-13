@@ -64,3 +64,9 @@ updates:
       actions:
         patterns:
           - "*"
+
+    ignore:
+      - dependency-name: "utoipa"
+        update-types: ["version-update:semver-major"]
+
+        
