@@ -68,3 +68,5 @@ updates:
     ignore:
       - dependency-name: "utoipa"
         update-types: ["version-update:semver-major"]
+
+        
