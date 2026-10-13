@@ -4,6 +4,9 @@
 #   - patch / minor はまとめて1本の PR にする。個別に来ると週に10本以上開く
 #     ことになり、数が多いと結局まとめて放置される
 #   - major は破壊的変更を含むので個別の PR にして単独で見る
+#     ただし utoipa 系は major も含めてまとめる。utoipa-axum / utoipa-swagger-ui は
+#     utoipa 本体の major に追従しており、1つだけ上げると 5.x と 6.x が混在して
+#     コンパイルが通らないため
 #   - 自動マージはしない。CI が緑でも依存の更新は挙動が変わりうる
 #   - labels は明示しない。GitHub 標準の dependencies + ecosystem ラベルを使う
 #     （標準ラベルは Dependabot が必要に応じて自動作成する）
@@ -23,6 +26,11 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
+      # cargo-minor-patch より先に置く（Dependabot は最初に一致したグループに入れる）
+      utoipa:
+        patterns:
+          - "utoipa"
+          - "utoipa-*"
       cargo-minor-patch:
         update-types:
           - "minor"
@@ -64,9 +72,3 @@ updates:
       actions:
         patterns:
           - "*"
-
-    ignore:
-      - dependency-name: "utoipa"
-        update-types: ["version-update:semver-major"]
-
-        
