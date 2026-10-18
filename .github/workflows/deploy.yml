@@ -1,6 +1,8 @@
 name: Deploy
 
 on:
+  # branches は head ブランチ名での絞り込みなので、名前が main の PR ブランチ（フォーク等）でも一致する。
+  # そのため各ジョブで workflow_run.event == 'push' も確認し、main への push 起点の CI だけをデプロイする
   workflow_run:
     workflows: ["CI"]
     types: [completed]
@@ -30,6 +32,7 @@ jobs:
     name: Deploy backend
     if: >-
       (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' &&
        (inputs.target == 'all' || inputs.target == 'backend'))
@@ -58,6 +61,7 @@ jobs:
     name: Deploy frontend
     if: >-
       (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' &&
        (inputs.target == 'all' || inputs.target == 'frontend'))

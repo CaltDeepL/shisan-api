@@ -368,7 +368,7 @@ GitHub Actions cron（JST 07:00）
 
 `main` のブランチ保護では `Backend (Rust)` と `Frontend (React)` の両ジョブを必須にしています。`paths` フィルタは置かず、どちらのチェックも PR ごとに実行します。
 
-Dependabot は Cargo・npm・GitHub Actions を毎週確認し、minor / patch はグループ化、major は個別 PR として作成します。自動マージは行わず、破壊的変更の確認と CI を経て取り込みます。
+Dependabot は Cargo・npm・GitHub Actions を毎週確認し、minor / patch はグループ化、major は個別 PR として作成します。例外として utoipa 系（`utoipa` / `utoipa-axum` / `utoipa-swagger-ui`）は、1つだけ上げると 5.x と 6.x が混在してビルドできないため、major も含めて1本にまとめています。自動マージは行わず、破壊的変更の確認と CI を経て取り込みます。
 
 `cargo sqlx prepare --check` により、`.sqlx` のオフラインクエリキャッシュが実際のスキーマと乖離していないかを検証しています。これがないと、マイグレーションを変更したのにキャッシュを再生成し忘れたまま Docker ビルド（`SQLX_OFFLINE=true`）が通ってしまいます。
 
@@ -430,6 +430,8 @@ cp .env.example .env    # 値を編集（DATABASE_URL のユーザー・パス�
 sqlx migrate run
 sqlx migrate info
 ```
+
+マイグレーションはすべて `.up.sql` / `.down.sql` の可逆形式です。追加するときは `sqlx migrate add -r <name>` で組として作り、`sqlx migrate revert` → `sqlx migrate run` を往復してスキーマが元に戻ることを確認してください。**適用済みのマイグレーションの本文は変更しないでください**（チェックサムが変わり、起動時の適用が失敗して API が起動しなくなります）。
 
 > **`.env` が2つある理由**
 >
@@ -499,6 +501,7 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | Dependabot | Cargo / npm / GitHub Actions の週次更新（minor / patch はグループ化） |
 | 認証依存更新 | `argon2 0.6` / `jsonwebtoken 11` 対応、旧 PHC 互換・JWT 境界テスト |
 | CI / リポジトリ保護 | `ci.yml` / `deploy.yml` への統合、ブランチ保護、`cargo audit` / `npm audit` |
+| マイグレーション・CI 設定の見直し | [0005 / 0006 を可逆形式へ統一、`@types` の major を個別化、workflow の入力を env 経由に、デプロイを push 起点に限定](asset-log/docs/task-33-migrations-down-and-ci-hardening.md) |
 | Rust 依存脆弱性対応 | [`rustls 0.23.44` の RUSTSEC-2026-0285](asset-log/docs/task-32-rustls-rustsec-2026-0285.md) を lockfile のみで `0.23.45` へ更新 |
 | Rust 依存脆弱性対応（2） | [`rustls` を `0.23.46` へ、`zip` の advisory は `utoipa-swagger-ui` を外して CDN + SRI の静的 HTML へ置き換え](asset-log/docs/task-34-audit-rustls-zip.md) |
 | 認証・API 契約 | パスワード上限と denylist、401 セッション破棄、全 4xx / 5xx の OpenAPI schema 検証 |

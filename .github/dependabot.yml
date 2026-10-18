@@ -49,9 +49,13 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
+      # major は他と同じく個別の PR にする（@types/node の major は Node の major に対応する）
       types:
         patterns:
           - "@types/*"
+        update-types:
+          - "minor"
+          - "patch"
       npm-minor-patch:
         update-types:
           - "minor"
