@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod config;
 pub mod cors;
+pub mod docs;
 pub mod domain;
 pub mod error;
 pub mod handler;
@@ -17,7 +18,6 @@ use state::AppState;
 
 use utoipa::OpenApi;
 use utoipa_axum::{router::OpenApiRouter, routes};
-use utoipa_swagger_ui::SwaggerUi;
 
 use crate::openapi::ApiDoc;
 
@@ -62,6 +62,6 @@ pub fn app(state: AppState, cors_origins: &[String]) -> Router {
 
     documented
         .with_state(state)
-        .merge(SwaggerUi::new("/docs").url("/openapi.json", api))
+        .merge(docs::router(api))
         .layer(cors::cors_layer(cors_origins))
 }

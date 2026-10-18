@@ -235,11 +235,66 @@ async fn operation_ids_are_unique(db: PgPool) {
 #[sqlx::test]
 async fn swagger_ui_is_served(db: PgPool) {
     let app = test_app(db);
-    let (status, _) = request(&app, Method::GET, "/docs", None, None).await;
 
-    // SwaggerUi はスラッシュ有無でリダイレクトすることがある
+    // 旧実装（utoipa-swagger-ui）の /docs/ も既存リンクのために返す
+    for path in ["/docs", "/docs/"] {
+        let (status, content_type, body) = get_raw(&app, path).await;
+
+        assert_eq!(status, StatusCode::OK, "{path}");
+        assert!(
+            content_type.starts_with("text/html"),
+            "{path}: {content_type}"
+        );
+        assert!(body.contains("url: '/openapi.json'"), "{path}");
+        // CDN の読み込みはバージョン固定 + SRI 付きであること
+        assert!(body.contains("swagger-ui-dist@5."), "{path}");
+        assert_eq!(body.matches(r#"integrity="sha384-"#).count(), 2, "{path}");
+    }
+}
+
+#[sqlx::test]
+async fn spec_is_served_as_json(db: PgPool) {
+    let app = test_app(db);
+    let (status, content_type, body) = get_raw(&app, "/openapi.json").await;
+
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(content_type, "application/json");
+    let spec: Value = serde_json::from_str(&body).expect("valid JSON");
     assert!(
-        status == StatusCode::OK || status.is_redirection(),
-        "unexpected status: {status}"
+        spec["openapi"]
+            .as_str()
+            .is_some_and(|v| v.starts_with("3."))
     );
+}
+
+/// HTML など JSON 以外の本文も確認するため、共通の `request` を使わずに叩く
+async fn get_raw(app: &axum::Router, path: &str) -> (StatusCode, String, String) {
+    use axum::{body::Body, http::Request};
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+
+    let response = app
+        .clone()
+        .oneshot(Request::get(path).body(Body::empty()).unwrap())
+        .await
+        .expect("request failed");
+    let status = response.status();
+    let content_type = response
+        .headers()
+        .get(axum::http::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or_default()
+        .to_owned();
+    let bytes = response
+        .into_body()
+        .collect()
+        .await
+        .expect("body")
+        .to_bytes();
+
+    (
+        status,
+        content_type,
+        String::from_utf8(bytes.to_vec()).expect("utf-8"),
+    )
 }
