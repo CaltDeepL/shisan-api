@@ -19,6 +19,18 @@
 
 > **ポートフォリオプロジェクトです。** バックエンド16タスク・フロントエンド8タスクのロードマップを完了し、CI・自動デプロイ・日次バッチが稼働しています。
 
+> 📝 **開発記事（Zenn）**：[Rust（axum + sqlx）で NISA・iDeCo を横断する資産管理アプリを作った話](https://zenn.dev/zennpay/articles/2c9515d6fe5bd0)
+> 設計で迷ったところ・実際にハマったところ・AI（Claude Code）との分担を、記事にまとめています。
+
+### スクリーンショット
+
+| 保有一覧 | 資産推移・資産配分 | CSV インポート |
+|---|---|---|
+| ![保有一覧](asset-log/docs/images/holdings.png) | ![分析](asset-log/docs/images/analytics.png) | ![CSV インポート](asset-log/docs/images/csv-import.png) |
+| 口座・銘柄ごとの評価額と評価損益（総平均法） | 口座種別ごとの資産推移と資産配分 | 本登録の前に検証。1行でもエラーがあれば全体を取り込まない |
+
+画面のデータはローカル環境に投入したサンプルで、実在の資産ではありません。
+
 ---
 
 ## なぜ作ったか
@@ -126,7 +138,7 @@ shisan-api/
     ├── .env                  # sqlx CLI 用の DATABASE_URL（gitignore 対象）
     ├── .sqlx/                # オフラインクエリキャッシュ
     ├── migrations/           # sqlx マイグレーション
-    ├── docs/                 # 設計メモ / 残タスク一覧 / openapi.json
+    ├── docs/                 # 設計メモ / 残タスク一覧 / openapi.json / images（README 用スクリーンショット）
     ├── tests/                # 統合テスト
     └── src/
         ├── main.rs           # clap CLI + axum 起動
@@ -176,9 +188,13 @@ shisan-api/
 
 ### なぜ ORM ではなく sqlx なのか
 
-コンパイル時に SQL を検証できるため。`query!` マクロが実際のスキーマに対してクエリを検証し、カラム名の誤りや型の不一致をビルド時に検出します。ORM の抽象化を挟むと、生成される SQL が見えにくくなり、資産推移のような集計クエリでパフォーマンスの予測が立ちません。
+コンパイル時に SQL を検証できるため。`query!` マクロが実際のスキーマに対してクエリを検証し、カラム名の誤りや型の不一致をビルド時に検出します。CI では `cargo sqlx prepare --check` を実行し、保存しているクエリ情報（`.sqlx`）がスキーマとずれていないかも確かめています。
+
+もう一つは、発行される SQL を自分で把握したかったためです。資産推移では `generate_series` と `LEFT JOIN LATERAL` を組み合わせた集計を書いています。こうしたクエリは ORM の書き方に置き換えるより、SQL のまま書くほうが実行計画を確認しやすいと判断しました。
 
 SQL を書く負担は残りますが、リポジトリ層に閉じ込めることで影響範囲を限定しています。
+
+ただし、コンパイル時の検証も万能ではありません。外部結合の nullable は推論できないことがあります（後述の「ハマったところ」）。
 
 ### なぜ NISA を1種類ではなく2種類の ENUM にしたのか
 
@@ -252,12 +268,13 @@ OpenApiRouter::with_openapi(ApiDoc::openapi())
 | DB | PostgreSQL 17 |
 | DB アクセス | sqlx 0.9（ORM 不使用） |
 | 認証 | Argon2 0.6 / jsonwebtoken 11（HS256） |
-| フロントエンド | Vite / React / TypeScript / Tailwind CSS v4 |
+| API 仕様 | utoipa 6 / utoipa-axum 0.3（OpenAPI 3.1）/ Swagger UI（CDN 配信 + SRI） |
+| フロントエンド | Vite / React / TypeScript / Tailwind CSS v4 / TanStack Query / Recharts |
 | Node | 24（Active LTS。`web/.node-version` で固定） |
 | コンテナ | Docker（マルチステージ + distroless） |
 | 外部 API | Frankfurter（ECB 為替レート） |
 | ホスティング | Render（API: Docker / フロント: Static Site）/ Neon（Postgres） |
-| CI / CD | GitHub Actions |
+| CI / CD | GitHub Actions / Dependabot |
 
 ---
 
@@ -321,12 +338,45 @@ React Query のルートキーと失効処理を `web/src/lib/queryKeys.ts` に�
 
 ---
 
+## ハマったところ
+
+詳細は各タスクのメモと[開発記事](https://zenn.dev/zennpay/articles/2c9515d6fe5bd0)にあります。
+
+### sqlx が `LEFT JOIN LATERAL` の nullable を推論できない
+
+```sql
+LEFT JOIN LATERAL (
+    SELECT price, priced_on FROM asset_prices
+    WHERE asset_id = h.asset_id AND priced_on <= sp.on_date
+    ORDER BY priced_on DESC LIMIT 1
+) p ON true
+```
+
+sqlx は外部結合であることを考慮せず、`asset_prices.price` の NOT NULL をそのまま引き継いで `Decimal` 型にします。**コンパイルは通り、テストデータに価格がそろっていればテストも通り、価格未登録の銘柄に当たった瞬間に実行時エラーになります。** `p.price AS "price?"` のように、NULL になりうることを明示して解決しました（[task-11](asset-log/docs/task-11-asset-history.md)）。
+
+### `rust:*-slim` と distroless で OS の世代がずれる
+
+| | ベース OS |
+|---|---|
+| builder: `rust:1.96-slim` | Debian 13（trixie） |
+| runtime: `distroless/cc-debian12` | Debian 12（bookworm） |
+
+`-slim` は軽量版という意味だけで、OS の世代は固定されません。GLIBC は新しい環境でビルドしたものが古い環境で動く保証がないため、builder 側も `-bookworm` に明示的にそろえました（[task-25](asset-log/docs/task-25-dependabot-major-updates.md)）。
+
+### Dependabot が utoipa 系を別々に上げてビルドが壊れる
+
+utoipa 6.0 が出たとき、Dependabot は `utoipa` / `utoipa-axum` / `utoipa-swagger-ui` を別々の PR で作りました。1つだけ上げると依存関係の中に 5.x と 6.x が混在し、`expected utoipa::openapi::OpenApi, found a different utoipa::openapi::OpenApi` という分かりにくいエラーになります。3つまとめて上げるとコードを変えずに通ったので、`dependabot.yml` に utoipa 系をまとめるグループを追加しました。`utoipa-swagger-ui` は、その後 zip の脆弱性対応で依存から外しています（[task-34](asset-log/docs/task-34-audit-rustls-zip.md)）。
+
+---
+
 ## Testing
 
 ```bash
 cd asset-log
 cargo test --all-targets
 ```
+
+現在 **119 件**のテスト（ユニット・統合）があります。
 
 統合テストは `#[sqlx::test(migrations = "./migrations")]` により、**テストごとに独立した一時 DB** を作成してマイグレーションを適用します。テスト間の状態共有がないため、並列実行しても干渉しません。
 
@@ -455,6 +505,28 @@ Swagger UI は `utoipa-swagger-ui` を使わず、CDN（jsDelivr）の `swagger-
 http://localhost:8080/docs
 
 OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/docs/openapi.json`](asset-log/docs/openapi.json) にもコミットしています。
+
+---
+
+## 開発の進め方と AI（Claude Code）の使い方
+
+バックエンド16タスク → フロントエンド8タスク → 運用・保守、の順に、**1タスク = 1作業メモ**で進めました。各タスクの「ゴールと完了条件 / 設計判断とその理由 / つまずいた点」を [`asset-log/docs/`](asset-log/docs/) に残しています（2026-08-17 着手 → 09-04 にフロントエンドまで完成 → 以降は CI 整備と依存更新の運用）。
+
+開発には Claude Code を使っています。
+
+| 工程 | 担当 |
+|---|---|
+| 何を作るか・要件を決める | 自分 |
+| 技術選定、要件を設計とタスクに落とし込む | AI（内容を確認してから採用） |
+| 実装 | 基本は自分。時間がなく重要度が低い作業は AI |
+| 書かれたコードの確認 | 自分 |
+| コードレビュー | Claude Code |
+
+AI を「発注先」として使い、何を作るか、そして出てきたものを受け入れるかどうかは自分で決める、という分担です。AI が書いたコードも、差分を自分で読み、テストを実行して動きを確かめてからマージしています。
+
+たとえば `cargo audit` で zip の脆弱性が見つかったとき、AI からは「`.cargo/audit.toml` で ignore する」案と「依存ごと外す」案の2つが出ました。ignore は理由がなくなった後も設定が残り続けるため、依存ごと外す案を採用し、`utoipa-swagger-ui` を CDN の静的 HTML に置き換えました（`Cargo.lock` から13クレート減）。
+
+振り返ると、設計・テスト・CI/CD まで1人でも短期間でそろえられた一方、AI に任せた部分は自分で書いた部分よりも身につきにくいという課題もあります。そのため、作業メモで判断の理由を残すこと、動作確認は自分で行い使った技術をその都度調べることを続けています。
 
 ---
 
