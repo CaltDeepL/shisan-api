@@ -19,10 +19,12 @@ jobs:
       LOOKBACK_DAYS: 2
     steps:
       - name: Wake up the service
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
         run: |
           for i in $(seq 1 10); do
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 \
-              "${{ secrets.API_BASE_URL }}/health" || true)
+              "$API_BASE_URL/health" || true)
             echo "attempt $i: /health -> $code"
             if [ "$code" = "200" ]; then exit 0; fi
             sleep 15
@@ -31,19 +33,34 @@ jobs:
           exit 1
 
       - name: Run snapshot
+        # 式展開（${{ }}）はスクリプトに文字列として埋め込まれるため、
+        # 入力値は env 経由で渡し、シェル変数として参照する
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          SNAPSHOT_JOB_TOKEN: ${{ secrets.SNAPSHOT_JOB_TOKEN }}
+          INPUT_FROM: ${{ inputs.from }}
+          INPUT_TO: ${{ inputs.to }}
         run: |
-          TO="${{ inputs.to }}"
-          FROM="${{ inputs.from }}"
+          TO="$INPUT_TO"
+          FROM="$INPUT_FROM"
           [ -z "$TO" ] && TO=$(TZ=Asia/Tokyo date +%F)
           [ -z "$FROM" ] && FROM=$(TZ=Asia/Tokyo date -d "$LOOKBACK_DAYS days ago" +%F)
+
+          # JSON に埋め込むので日付形式に限定する
+          for d in "$FROM" "$TO"; do
+            if ! [[ "$d" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+              echo "::error::日付は YYYY-MM-DD で指定してください: $d"
+              exit 1
+            fi
+          done
           echo "range: $FROM .. $TO"
 
           response=$(curl -sS -w '\n%{http_code}' -X POST \
             --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
-            -H "Authorization: Bearer ${{ secrets.SNAPSHOT_JOB_TOKEN }}" \
+            -H "Authorization: Bearer $SNAPSHOT_JOB_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"from\":\"$FROM\",\"to\":\"$TO\"}" \
-            "${{ secrets.API_BASE_URL }}/snapshots/run")
+            "$API_BASE_URL/snapshots/run")
 
           body=$(echo "$response" | sed '$d')
           code=$(echo "$response" | tail -n1)
