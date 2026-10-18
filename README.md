@@ -448,6 +448,8 @@ sqlx migrate info
 
 起動後、Swagger UI から全エンドポイントの仕様を確認し、その場でリクエストを試せます。
 
+Swagger UI は `utoipa-swagger-ui` を使わず、CDN（jsDelivr）の `swagger-ui-dist` を読み込む静的 HTML で配信しています（[`src/docs.rs`](asset-log/src/docs.rs)）。バージョンは完全一致で固定し、SRI（`integrity`）で配信内容を検証します。ビルド時依存の `zip` に修正版のない advisory が出たため、依存ごと外しました（[task-34](asset-log/docs/task-34-audit-rustls-zip.md)）。
+
 http://localhost:8080/docs
 
 OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/docs/openapi.json`](asset-log/docs/openapi.json) にもコミットしています。
@@ -498,6 +500,7 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 | 認証依存更新 | `argon2 0.6` / `jsonwebtoken 11` 対応、旧 PHC 互換・JWT 境界テスト |
 | CI / リポジトリ保護 | `ci.yml` / `deploy.yml` への統合、ブランチ保護、`cargo audit` / `npm audit` |
 | Rust 依存脆弱性対応 | [`rustls 0.23.44` の RUSTSEC-2026-0285](asset-log/docs/task-32-rustls-rustsec-2026-0285.md) を lockfile のみで `0.23.45` へ更新 |
+| Rust 依存脆弱性対応（2） | [`rustls` を `0.23.46` へ、`zip` の advisory は `utoipa-swagger-ui` を外して CDN + SRI の静的 HTML へ置き換え](asset-log/docs/task-34-audit-rustls-zip.md) |
 | 認証・API 契約 | パスワード上限と denylist、401 セッション破棄、全 4xx / 5xx の OpenAPI schema 検証 |
 | ビルド再現性 | Rust toolchain の固定、builder / runtime の Debian 12 統一 |
 | クライアント整合性 | mutation 後の関連キャッシュ失効と、Problem Details 以外のエラー本文処理を共通化 |
