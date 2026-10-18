@@ -29,8 +29,6 @@
 | ![保有一覧](asset-log/docs/images/holdings.png) | ![分析](asset-log/docs/images/analytics.png) | ![CSV インポート](asset-log/docs/images/csv-import.png) |
 | 口座・銘柄ごとの評価額と評価損益（総平均法） | 口座種別ごとの資産推移と資産配分 | 本登録の前に検証。1行でもエラーがあれば全体を取り込まない |
 
-画面のデータはローカル環境に投入したサンプルで、実在の資産ではありません。
-
 ---
 
 ## なぜ作ったか
