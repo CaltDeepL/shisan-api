@@ -150,7 +150,7 @@ shisan-api/
         ├── handler/
         ├── service/
         ├── repository/
-        ├── provider/         # fx / price（trait）
+        ├── provider/         # 為替レート（fx の trait とキャッシュ）
         ├── middleware/       # auth
         └── job/              # daily_snapshot
 ```
