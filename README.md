@@ -117,6 +117,7 @@
 
 ```
 shisan-api/
+├── CLAUDE.md                 # AI エージェント向けの作業ガイド（.cursor/rules/ も同じ内容の要約）
 ├── compose.yaml              # Postgres + API
 ├── .env                      # Compose 用の環境変数（gitignore 対象）
 ├── .github/workflows/        # ci.yml / deploy.yml / snapshot.yml
@@ -508,7 +509,7 @@ OpenAPI 3.1 の仕様は `/openapi.json` で配信しており、[`asset-log/doc
 
 ## 開発の進め方と AI（Claude Code）の使い方
 
-バックエンド16タスク → フロントエンド8タスク → 運用・保守、の順に、**1タスク = 1作業メモ**で進めました。各タスクの「ゴールと完了条件 / 設計判断とその理由 / つまずいた点」を [`asset-log/docs/`](asset-log/docs/) に残しています（2026-08-17 着手 → 09-04 にフロントエンドまで完成 → 以降は CI 整備と依存更新の運用）。
+バックエンド16タスク → フロントエンド8タスク → 運用・保守、の順に、**1タスク = 1作業メモ**で進めました。各タスクの「ゴールと完了条件 / 設計判断とその理由 / つまずいた点」を [`asset-log/docs/`](asset-log/docs/) に残しています（2026-08-17 着手 → 09-04 にフロントエンドまで完成 → 以降は CI 整備と依存更新の運用）。2026-10-24 以降のタスクは GitHub Issue で管理し、作業メモもその Issue に書いています。
 
 開発には Claude Code を使っています。
 
