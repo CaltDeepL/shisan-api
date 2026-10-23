@@ -1,0 +1,15 @@
+---
+description: shisan-api の基本ルール
+alwaysApply: true
+---
+
+# shisan-api
+
+- 詳細なルールはリポジトリ直下の `CLAUDE.md`、設計の背景は `README.md` を正とする
+- バックエンドは `asset-log/`（Rust / Axum / SQLx / utoipa）、フロントは `web/`（React / TypeScript / Vite）
+- バックエンドの変更後は `cargo fmt --all -- --check`、`cargo clippy --all-targets -- -D warnings`、`cargo test --all-targets` を通す
+- フロントの変更後は `npm run typecheck`、`npm run lint`、`npm run build` を通す
+- API を変えたら OpenAPI と `web/src/api/schema.d.ts` を再生成する
+- エラー応答は RFC 9457。金額は `Decimal`。ロジックは `domain/` の純粋関数に置く
+- タスクは GitHub Issue で管理し、作業メモも Issue に書く
+- `.env` や秘密情報をコミット・出力しない
